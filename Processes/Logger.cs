@@ -33,7 +33,6 @@ namespace Processes
                 {
                     Instance.logStream.Write(encodedText, 0, encodedText.Length);
                 }
-                //Instance.logStream.Flush();
             }
             catch(Exception e)
             {
