@@ -64,6 +64,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Driver\BaseDriver.cs" />
     <Compile Include="KernelController.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="MainForm.cs">

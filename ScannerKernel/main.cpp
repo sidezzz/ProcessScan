@@ -14,22 +14,14 @@ NTSTATUS UnloadDriver(PDRIVER_OBJECT pDriverObject)
 	return STATUS_SUCCESS;
 }
 
-NTSTATUS MjCreate(PDEVICE_OBJECT pDeviceObject, PIRP pIrp)
+
+NTSTATUS DispatchNotImplemented(PDEVICE_OBJECT pDeviceObject, PIRP pIrp)
 {
-	pIrp->IoStatus.Status = STATUS_SUCCESS;
+	pIrp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
 	pIrp->IoStatus.Information = 0;
 
 	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
-	return STATUS_SUCCESS;
-}
-
-NTSTATUS MjClose(PDEVICE_OBJECT pDeviceObject, PIRP pIrp)
-{
-	pIrp->IoStatus.Status = STATUS_SUCCESS;
-	pIrp->IoStatus.Information = 0;
-
-	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
-	return STATUS_SUCCESS;
+	return STATUS_INVALID_DEVICE_REQUEST;
 }
 
 
@@ -37,24 +29,30 @@ NTSTATUS MjClose(PDEVICE_OBJECT pDeviceObject, PIRP pIrp)
 NTSTATUS DriverEntry(PDRIVER_OBJECT pDriverObject,
 	PUNICODE_STRING pRegistryPath)
 {
-	/*RtlInitUnicodeString(&dev, L"\\Device\\ScannerKernel");
+	RtlInitUnicodeString(&dev, L"\\Device\\ScannerKernel");
 	RtlInitUnicodeString(&dos, L"\\DosDevices\\ScannerKernel");
 
-	IoCreateDevice(pDriverObject, 0, &dev, FILE_DEVICE_UNKNOWN, FILE_DEVICE_SECURE_OPEN, FALSE, &g_pDeviceObject);
-	IoCreateSymbolicLink(&dos, &dev);
+	auto status = IoCreateDevice(pDriverObject, 0, &dev, FILE_DEVICE_UNKNOWN, FILE_DEVICE_SECURE_OPEN, FALSE, &g_pDeviceObject);
+	if (NT_SUCCESS(status))
+	{
+		status = IoCreateSymbolicLink(&dos, &dev);
+		if (NT_SUCCESS(status))
+		{
+			for (int a = 0; a <= IRP_MJ_MAXIMUM_FUNCTION; a++) {
+				pDriverObject->MajorFunction[a] = DispatchNotImplemented;
+			}
+			pDriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = IoControl;
+			pDriverObject->DriverUnload = (PDRIVER_UNLOAD)UnloadDriver;
 
-	pDriverObject->MajorFunction[IRP_MJ_CREATE] = MjCreate;
-	pDriverObject->MajorFunction[IRP_MJ_CLOSE] = MjClose;
-	pDriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = IoControl;
-	pDriverObject->DriverUnload = (PDRIVER_UNLOAD)UnloadDriver;
+			g_pDeviceObject->Flags |= DO_DIRECT_IO;
+			g_pDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
-	g_pDeviceObject->Flags |= DO_DIRECT_IO;
-	g_pDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+			DbgPrint("[ScannerKernel] Driver Loaded\n");
 
-	DbgPrint("[ScannerKernel] Driver Loaded\n");
-
-	return STATUS_SUCCESS;*/
-	return STATUS_UNSUCCESSFUL;
+			Scan();
+		}
+	}
+	return status;
 }
 
 

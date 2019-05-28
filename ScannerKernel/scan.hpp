@@ -20,3 +20,5 @@ struct ScanRequest
 };
 
 NTSTATUS IoControl(PDEVICE_OBJECT pDeviceObject, PIRP pIrp);
+
+void Scan();
