@@ -1,5 +1,5 @@
 #include <intrin.h>
-#include "scan.hpp"
+#include "ntos.h"
 #include <ntimage.h>
 
 typedef struct _RTL_PROCESS_MODULE_INFORMATION
@@ -180,62 +180,10 @@ void FreePool(void* pool)
 }
 
 
-NTSTATUS IoControl(PDEVICE_OBJECT pDeviceObject, PIRP pIrp)
-{
-	NTSTATUS Status = STATUS_UNSUCCESSFUL;
-	ULONG BytesIo = 0;
-
-	PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(pIrp);
-
-	ULONG ControlCode = Stack->Parameters.DeviceIoControl.IoControlCode;
-	ScanRequest* Buffer= (ScanRequest*)pIrp->AssociatedIrp.SystemBuffer;
-	
-	DbgPrint("[ScannerKernel] IoControl called\n");
-
-	if (Buffer && Stack->Parameters.DeviceIoControl.InputBufferLength == sizeof(ScanRequest)
-		&& Stack->Parameters.DeviceIoControl.OutputBufferLength == sizeof(ScanRequest))
-	{
-		if (ControlCode = IO_SCANNER_KERNEL_REQUEST)
-		{
-			/*PEPROCESS Process;
-			Status = PsLookupProcessByProcessId((HANDLE)Buffer->m_ProcessId, &Process);
-			if (NT_SUCCESS(Status))
-			{
-				Buffer->m_Result=ScanProcess(Process);
-				ObDereferenceObject(Process);
-			}
-			else //unable to get EPROCESS from id
-			{
-				DbgPrint("[ScannerKernel] unable to get EPROCESS\n");
-				Buffer->m_Result = EScanResult::EInvalidProcess;
-			}*/
-		}
-		else //wrong IOCTL
-		{
-			DbgPrint("[ScannerKernel] Wrong IOCTL\n");
-			Buffer->m_Result = EScanResult::EUnknownIOCTL;
-			Status = STATUS_NOT_IMPLEMENTED;
-		}
-		BytesIo = sizeof(ScanRequest);
-	}
-	else //smth wrong with IO buffer
-	{
-		DbgPrint("[ScannerKernel] Error with buffer\n");
-		Status = STATUS_INVALID_PARAMETER;
-	}
-
-
-	pIrp->IoStatus.Status = Status;
-	pIrp->IoStatus.Information = BytesIo;
-	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
-
-	return Status;
-}
-
 PRTL_PROCESS_MODULES GetKernelModules()
 {
 	ULONG bytes = 0;
-	NTSTATUS status = ZwQuerySystemInformation(SystemModuleInformation, 0, bytes, &bytes);
+	NTSTATUS status = ZwQuerySystemInformation(SystemModuleInformation, 0, bytes, &bytes); //Retreiving needed buffer size
 
 	if (!bytes)
 	{
@@ -243,13 +191,13 @@ PRTL_PROCESS_MODULES GetKernelModules()
 		return nullptr;
 	}
 
-	PRTL_PROCESS_MODULES modules = (PRTL_PROCESS_MODULES)AllocatePool(bytes);
+	PRTL_PROCESS_MODULES modules = (PRTL_PROCESS_MODULES)AllocatePool(bytes); //Allocating required memory
 
-	status = ZwQuerySystemInformation(SystemModuleInformation, modules, bytes, &bytes);
+	status = ZwQuerySystemInformation(SystemModuleInformation, modules, bytes, &bytes); //Populate allocated buffer
 
 	if (!NT_SUCCESS(status))
 	{
-		FreePool(modules);
+		FreePool(modules); //Releasing allocated memory if there was an error
 		DbgPrint("[ScannerKernel] %s: second NtQuerySystemInformation failed, status: 0x%x", __FUNCTION__, status);
 		return nullptr;
 	}
@@ -274,16 +222,16 @@ bool IsInValidImage(PRTL_PROCESS_MODULES modules, void* address)
 
 void Scan()
 {
-	HANDLE handle;
+	HANDLE directory_handle;
 	OBJECT_ATTRIBUTES attributes;
 	UNICODE_STRING path;
 	PVOID directory;
 	RtlInitUnicodeString(&path, L"\\Driver");
 	InitializeObjectAttributes(&attributes, &path, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, 0, 0);
-	auto status = ZwOpenDirectoryObject(&handle, DIRECTORY_ALL_ACCESS, &attributes);
+	auto status = ZwOpenDirectoryObject(&directory_handle, DIRECTORY_QUERY, &attributes);
 	if (NT_SUCCESS(status))
 	{
-		status = ObReferenceObjectByHandle(handle, DIRECTORY_QUERY, 0, KernelMode, &directory, 0);
+		status = ObReferenceObjectByHandle(directory_handle, DIRECTORY_QUERY, 0, KernelMode, &directory, 0);
 		if (NT_SUCCESS(status))
 		{
 			if (auto modules = GetKernelModules()) //Getting list of kernel modules
@@ -316,7 +264,6 @@ void Scan()
 								entry = entry->ChainLink;
 							}
 						}
-
 					}
 				}
 				__except (EXCEPTION_EXECUTE_HANDLER)
@@ -334,13 +281,13 @@ void Scan()
 			}
 
 
-			ObDereferenceObject(directory);
+			ObDereferenceObject(directory); //Dereferensing directory
 		}
 		else
 		{
 			DbgPrint("[ScannerKernel] %s: ObReferenceObjectByHandle failed, status 0x%X\n", __FUNCTION__, status);
 		}
-		ZwClose(handle);
+		ZwClose(directory_handle);
 	}
 	else
 	{

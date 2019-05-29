@@ -4,6 +4,75 @@
 PDEVICE_OBJECT g_pDeviceObject; 
 UNICODE_STRING dev, dos; // Driver registry paths
 
+#define IO_SCANNER_KERNEL_REQUEST CTL_CODE(FILE_DEVICE_UNKNOWN, 0x1337, METHOD_BUFFERED, FILE_SPECIAL_ACCESS)
+
+enum EScanResult
+{
+	EUnknownError = 0,
+	ESafe = 1,
+	EDetected = 2,
+	EInvalidProcess = 3,
+	EUnknownIOCTL = 4
+};
+
+
+struct ScanRequest
+{
+	int m_ProcessId;
+	EScanResult m_Result;
+};
+
+NTSTATUS IoControl(PDEVICE_OBJECT pDeviceObject, PIRP pIrp)
+{
+	NTSTATUS Status = STATUS_UNSUCCESSFUL;
+	ULONG BytesIo = 0;
+
+	PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(pIrp);
+
+	ULONG ControlCode = Stack->Parameters.DeviceIoControl.IoControlCode;
+	ScanRequest* Buffer = (ScanRequest*)pIrp->AssociatedIrp.SystemBuffer;
+
+	DbgPrint("[ScannerKernel] IoControl called\n");
+
+	if (Buffer && Stack->Parameters.DeviceIoControl.InputBufferLength == sizeof(ScanRequest)
+		&& Stack->Parameters.DeviceIoControl.OutputBufferLength == sizeof(ScanRequest))
+	{
+		if (ControlCode = IO_SCANNER_KERNEL_REQUEST)
+		{
+			/*PEPROCESS Process;
+			Status = PsLookupProcessByProcessId((HANDLE)Buffer->m_ProcessId, &Process);
+			if (NT_SUCCESS(Status))
+			{
+				Buffer->m_Result=ScanProcess(Process);
+				ObDereferenceObject(Process);
+			}
+			else //unable to get EPROCESS from id
+			{
+				DbgPrint("[ScannerKernel] unable to get EPROCESS\n");
+				Buffer->m_Result = EScanResult::EInvalidProcess;
+			}*/
+		}
+		else //wrong IOCTL
+		{
+			DbgPrint("[ScannerKernel] Wrong IOCTL\n");
+			Buffer->m_Result = EScanResult::EUnknownIOCTL;
+			Status = STATUS_NOT_IMPLEMENTED;
+		}
+		BytesIo = sizeof(ScanRequest);
+	}
+	else //smth wrong with IO buffer
+	{
+		DbgPrint("[ScannerKernel] Error with buffer\n");
+		Status = STATUS_INVALID_PARAMETER;
+	}
+
+
+	pIrp->IoStatus.Status = Status;
+	pIrp->IoStatus.Information = BytesIo;
+	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+
+	return Status;
+}
 
 NTSTATUS UnloadDriver(PDRIVER_OBJECT pDriverObject)
 {
