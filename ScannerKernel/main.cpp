@@ -4,45 +4,6 @@
 PDEVICE_OBJECT g_pDeviceObject; 
 UNICODE_STRING dev, dos; // Driver registry paths
 
-#define IO_SCANNER_KERNEL_REQUEST CTL_CODE(FILE_DEVICE_UNKNOWN, 0x1337, METHOD_BUFFERED, FILE_SPECIAL_ACCESS)
-
-NTSTATUS IoControl(PDEVICE_OBJECT pDeviceObject, PIRP pIrp)
-{
-	NTSTATUS status = STATUS_UNSUCCESSFUL;
-	ULONG bytes_io = 0;
-
-	PIO_STACK_LOCATION stack = IoGetCurrentIrpStackLocation(pIrp);
-
-	ULONG control_code = stack->Parameters.DeviceIoControl.IoControlCode;
-	if (control_code = IO_SCANNER_KERNEL_REQUEST)
-	{
-		DriverObjectArray* buffer = (DriverObjectArray*)pIrp->AssociatedIrp.SystemBuffer;
-		auto input_len = stack->Parameters.DeviceIoControl.InputBufferLength;
-		if (input_len >= sizeof(DriverObjectArray) && input_len >= (buffer->Max * sizeof(DriverObject) + 8))
-		{
-			DbgPrint("[ScannerKernel] %s: buffer_size %d, max objects %d\n", __FUNCTION__, input_len, buffer->Max);
-			buffer->Count = Scan(buffer->Array, buffer->Max);
-			bytes_io = input_len;
-			status = STATUS_SUCCESS;
-		}
-		else
-		{
-			DbgPrint("[ScannerKernel] %s: buffer size mismatch, size %d\n", __FUNCTION__, input_len);
-		}
-	}
-	else //wrong IOCTL
-	{
-		DbgPrint("[ScannerKernel] %s: Wrong IOCTL\n", __FUNCTION__);
-		status = STATUS_NOT_IMPLEMENTED;
-	}
-
-	pIrp->IoStatus.Status = status;
-	pIrp->IoStatus.Information = bytes_io;
-	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
-
-	return status;
-}
-
 NTSTATUS IoRead(PDEVICE_OBJECT pDeviceObject, PIRP pIrp)
 {
 	NTSTATUS status = STATUS_UNSUCCESSFUL;
@@ -57,7 +18,7 @@ NTSTATUS IoRead(PDEVICE_OBJECT pDeviceObject, PIRP pIrp)
 		{
 			bytes_io = Scan(buffer, max_objects) * sizeof(DriverObject);
 			status = STATUS_SUCCESS;
-			DbgPrint("[ScannerKernel] %s: successfully read %d bytes\n", __FUNCTION__, bytes_io);
+			DbgPrint("[ScannerKernel] %s: successfully read %d objects\n", __FUNCTION__, bytes_io / sizeof(DriverObject));
 		}
 		else
 		{
@@ -68,6 +29,7 @@ NTSTATUS IoRead(PDEVICE_OBJECT pDeviceObject, PIRP pIrp)
 	else
 	{
 		DbgPrint("[ScannerKernel] %s: buffer nullptr\n", __FUNCTION__);
+		status = STATUS_INVALID_ADDRESS;
 	}
 
 	pIrp->IoStatus.Status = status;
@@ -113,11 +75,9 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT pDriverObject,
 			pDriverObject->MajorFunction[IRP_MJ_CREATE] = MjSuccess;
 			pDriverObject->MajorFunction[IRP_MJ_CLOSE] = MjSuccess;
 			pDriverObject->MajorFunction[IRP_MJ_READ] = IoRead;
-			pDriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = IoControl;
 			pDriverObject->DriverUnload = (PDRIVER_UNLOAD)UnloadDriver;
 
 			g_pDeviceObject->Flags |= DO_DIRECT_IO;
-			//g_pDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
 			DbgPrint("[ScannerKernel] Driver Loaded\n");
 		}
