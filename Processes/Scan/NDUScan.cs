@@ -176,11 +176,11 @@ namespace Processes.Scan
                 {
                     Utils.ParseFileByLine("database\\daily.ndb", ParseNDULine);
                     Utils.ParseFileByLine("database\\daily.ndu", ParseNDULine);
-                    Logger.Log("InitNDU loaded " + NDUContainer.Count.ToString() + " signatures");
+                    Logger.Log($"InitNDU loaded {NDUContainer.Count} signatures");
                 }
                 catch (Exception e)
                 {
-                    Logger.Log("InitNDU exception: " + e.Message);
+                    Logger.Log($"InitNDU exception: {e.Message}");
                 }
                 IsInit = true;
             });

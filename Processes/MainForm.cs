@@ -74,7 +74,7 @@ namespace Processes
 
         internal List<ProcessInfoRow> RefreshProcessGrid()
         {
-            return Program.Scanner.GetProcessList().Select(p => new ProcessInfoRow(p)).ToList();
+            return Scan.Utils.GetProcessList().Select(p => new ProcessInfoRow(p)).ToList();//Program..GetProcessList().Select(p => new ProcessInfoRow(p)).ToList();
         }
 
         private async void refreshButton_Click(object sender, EventArgs e)

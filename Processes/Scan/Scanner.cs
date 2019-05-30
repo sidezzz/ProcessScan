@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Data;
-using System.Drawing;
 using System.Diagnostics;
 using System.IO;
 using System.Collections;
@@ -14,21 +13,6 @@ using System.Collections.Concurrent;
 
 namespace Processes.Scan
 {
-    public class ProcessInfo
-    {
-        public Icon Icon;
-        public string Path;
-        public string Name;
-        public int PID;
-    }
-
-    public class ModuleInfo
-    {
-        public string Path;
-        public string Name;
-        public string Result;
-    }
-
     class Scanner
     {
         private List<IModuleScan> ScanMethods;
@@ -46,35 +30,6 @@ namespace Processes.Scan
             ScanMethods.Add(new HSBScan());
             ScanMethods.Add(new NDUScan());
         }
-
-
-        public List<ProcessInfo> GetProcessList()
-        {
-            var processList = new List<ProcessInfo>();
-            foreach (var process in Process.GetProcesses())
-            {
-                try
-                {
-                    var info = new ProcessInfo();
-                    info.Name = process.MainModule.ModuleName;
-                    info.Path = process.MainModule.FileName;
-                    info.Icon = Icon.ExtractAssociatedIcon(process.MainModule.FileName);
-                    info.PID = process.Id;
-                    processList.Add(info);
-                }
-                catch { }
-                /*catch(System.ComponentModel.Win32Exception e)
-                {
-                    Logger.Log("Refresh exception on process: \"" + process.ProcessName + "\" : " + e.Message);
-                }
-                catch(Exception e)
-                {
-                    Logger.Log("Refresh exception: " + e.Message);
-                }*/
-            }
-            return processList;
-        }
-
 
 
         public void BeginScan(List<ProcessInfo> processList, Action<ModuleInfo> addModuleCallback)
@@ -101,15 +56,13 @@ namespace Processes.Scan
                 $"total count {(CacheWins + CacheMisses)}");
         }
 
-        public void ScanProcess(ProcessInfo info, Action<ModuleInfo> addModuleCallback)
+        public void ScanProcess(ProcessInfo processInfo, Action<ModuleInfo> addModuleCallback)
         {
             try
             {
-                var proc = Process.GetProcessById(info.PID);
-                var modules = proc.Modules;
-                Parallel.ForEach(modules.Cast<ProcessModule>(), (module) =>
+                Parallel.ForEach(processInfo.GetModules(), (module) =>
                 {
-                    ScanModule(proc, module, addModuleCallback);
+                    ScanModule(module, addModuleCallback);
                 });
             }
             catch (Exception e)
@@ -119,32 +72,28 @@ namespace Processes.Scan
         }
 
 
-        public void ScanModule(Process proc, ProcessModule module, Action<ModuleInfo> addModuleCallback)
+        public void ScanModule(ModuleInfo moduleInfo, Action<ModuleInfo> addModuleCallback)
         {
             try
             {
-                var info = new ModuleInfo();
-                info.Path = module.FileName;
-                info.Name = $"[{proc.ProcessName}]->{module.ModuleName}";
-
-                if (!ScanResultCache.TryGetValue(info.Path, out info.Result))
+                if (!ScanResultCache.TryGetValue(moduleInfo.Path, out moduleInfo.Result))
                 {
-                    byte[] cachedFile = File.ReadAllBytes(info.Path); ;
+                    byte[] cachedFile = File.ReadAllBytes(moduleInfo.Path); ;
                     foreach (var method in ScanMethods)
                     {
-                        if (method.Scan(info.Path, ref info.Result, cachedFile) == ScanStatus.Stop)
+                        if (method.Scan(moduleInfo.Path, ref moduleInfo.Result, cachedFile) == ScanStatus.Stop)
                         {
                             break;
                         }
                     }
-                    ScanResultCache.TryAdd(info.Path, info.Result);
+                    ScanResultCache.TryAdd(moduleInfo.Path, moduleInfo.Result);
                     Interlocked.Increment(ref CacheMisses);
                 }
                 else
                 {
                     Interlocked.Increment(ref CacheWins);
                 }
-                addModuleCallback(info);
+                addModuleCallback(moduleInfo);
 
             }
             catch (Exception e)
