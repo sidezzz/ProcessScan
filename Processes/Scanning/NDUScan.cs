@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Win32;
 using System.Runtime.InteropServices;
 
-namespace Processes.Scan
+namespace Processes.Scanning
 {
     class NDUScan : IModuleScan
     {
@@ -37,6 +37,7 @@ namespace Processes.Scan
 
         private readonly List<ExtendedSignature> NDUContainer;
         private bool IsInit;
+        private Task InitTask;
 
         public NDUScan()
         {
@@ -46,16 +47,13 @@ namespace Processes.Scan
 
         public ScanStatus Scan(string fileName, ref string result, byte[] cachedFile)
         {
-            while (!IsInit)
-            { Task.Delay(25).Wait(); }
-
+            if (!IsInit)
+            {
+                InitTask.Wait();
+            }
             try
             {
-                var sb = new StringBuilder();
-                foreach (var b in cachedFile)
-                    sb.Append(b.ToString("x2"));
-                var file = sb.ToString();
-
+                var file = Utils.ByteArrayToString(cachedFile);
 
                 foreach (var sig in NDUContainer)
                 {
@@ -168,9 +166,9 @@ namespace Processes.Scan
             }
         }
 
-        private async void InitNDU()
+        private void InitNDU()
         {
-            await Task.Run(() =>
+            InitTask = new Task(() =>
             {
                 try
                 {
@@ -184,6 +182,7 @@ namespace Processes.Scan
                 }
                 IsInit = true;
             });
+            InitTask.Start();
         }
     }
 }

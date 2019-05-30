@@ -35,7 +35,7 @@ namespace Processes
             }
             catch(Exception e)
             {
-                MessageBox.Show($"Log exception {e.ToString()}");
+                //MessageBox.Show($"Log exception {e.ToString()}");
             }
         }
     }

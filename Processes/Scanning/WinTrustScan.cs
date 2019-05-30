@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Processes.WinT;
 
-namespace Processes.Scan
+namespace Processes.Scanning
 {
     class WinTrustScan : IModuleScan
     {

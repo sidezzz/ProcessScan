@@ -1,5 +1,6 @@
 ﻿// dllmain.cpp : Определяет точку входа для приложения DLL.
 #include <Windows.h>
+#include <iostream>
 
 
 template<class T = void>
@@ -59,7 +60,7 @@ extern "C" __declspec(dllexport) SECTION GetSectionByIndex(PVOID image, int idx)
 
 extern "C" __declspec(dllexport) DWORD GetEntryRawOffset(PVOID image)
 {
-	DWORD ret=0;
+	DWORD ret = 0;
 	if (auto nt_header = GetNtHeader(image))
 	{
 		auto entry_offset = nt_header->OptionalHeader.AddressOfEntryPoint;
@@ -78,6 +79,32 @@ extern "C" __declspec(dllexport) DWORD GetEntryRawOffset(PVOID image)
 		}
 	}
 	return ret;
+}
+
+
+struct DriverObject
+{
+	wchar_t Name[100];
+	int Result;
+};
+
+struct DriverArray
+{
+	int Count;
+	DriverObject Array[3];
+};
+
+extern "C" __declspec(dllexport) void TestFunc(DriverArray* object_array)
+{
+	char buf[123];
+	sprintf_s(buf, "%p", object_array);
+	MessageBoxA(0, buf, buf, 0);
+	for (int a = 0; a < object_array->Count; a++)
+	{
+		sizeof(DriverArray);
+		memcpy(object_array->Array[a].Name, L"suka", sizeof(L"suka"));
+		object_array->Array[a].Result = a;
+	}
 }
 
 

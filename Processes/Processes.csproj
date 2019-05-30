@@ -34,7 +34,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>..\x64\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -76,12 +76,12 @@
     <Compile Include="NtStatus.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Scan\Scanner.cs" />
-    <Compile Include="Scan\HSBScan.cs" />
-    <Compile Include="Scan\IModuleScan.cs" />
-    <Compile Include="Scan\NDUScan.cs" />
-    <Compile Include="Scan\WinTrustScan.cs" />
-    <Compile Include="Scan\Utils.cs" />
+    <Compile Include="Scanning\Scanner.cs" />
+    <Compile Include="Scanning\HSBScan.cs" />
+    <Compile Include="Scanning\IModuleScan.cs" />
+    <Compile Include="Scanning\NDUScan.cs" />
+    <Compile Include="Scanning\WinTrustScan.cs" />
+    <Compile Include="Scanning\Utils.cs" />
     <Compile Include="WinTrust.cs" />
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>

@@ -7,8 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Diagnostics.Contracts;
-using Processes.Scan;
+using Processes.Scanning;
 
 namespace Processes
 {
@@ -16,19 +15,22 @@ namespace Processes
     {
 
         private BindingList<ModuleInfoRow> ModuleStore = new BindingList<ModuleInfoRow>();
+        private BindingList<DriverObjectInfoRow> DriverObjectStore = new BindingList<DriverObjectInfoRow>();
 
         public MainForm()
         {
             InitializeComponent();
-            modulesDataGridView.DataSource = ModuleStore;
 
+            modulesDataGridView.DataSource = ModuleStore;
             modulesDataGridView.RowsAdded += modulesDataGridView_RowsAdded;
+
+            driverObjectDataGridView.DataSource = DriverObjectStore;
+            driverObjectDataGridView.RowsAdded += driverObjectDataGridView_RowsAdded;
         }
 
         private void modulesDataGridView_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
         {
             var status = modulesDataGridView.Rows[e.RowIndex].Cells["moduleResult"].Value as string;
-            Contract.Invariant(status != null, "moduleResult not string");
 
             if (status == "Success")
             {
@@ -45,7 +47,22 @@ namespace Processes
 
         }
 
-        internal class ProcessInfoRow
+        private void driverObjectDataGridView_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
+        {
+            var status = driverObjectDataGridView.Rows[e.RowIndex].Cells["driverObjectResult"].Value as string;
+
+            if (status == "Success")
+            {
+                //modulesDataGridView.Rows[e.RowIndex].DefaultCellStyle.BackColor = Color.Green;
+            }
+            else
+            {
+                driverObjectDataGridView.Rows[e.RowIndex].DefaultCellStyle.BackColor = Color.Red;
+            }
+
+        }
+
+        class ProcessInfoRow
         {
             public readonly ProcessInfo info;
 
@@ -58,7 +75,7 @@ namespace Processes
             }
         }
         
-        internal class ModuleInfoRow
+        class ModuleInfoRow
         {
             public readonly ModuleInfo info;
 
@@ -71,10 +88,21 @@ namespace Processes
             }
         }
 
-
-        internal List<ProcessInfoRow> RefreshProcessGrid()
+        class DriverObjectInfoRow
         {
-            return Scan.Utils.GetProcessList().Select(p => new ProcessInfoRow(p)).ToList();//Program..GetProcessList().Select(p => new ProcessInfoRow(p)).ToList();
+            public readonly DriverObjectInfo info;
+            public string Name => info.Name;
+            public string Result => info.Result;
+            public DriverObjectInfoRow(DriverObjectInfo info)
+            {
+                this.info = info;
+            }
+        }
+
+
+        List<ProcessInfoRow> RefreshProcessGrid()
+        {
+            return Utils.GetProcessList().Select(p => new ProcessInfoRow(p)).ToList();
         }
 
         private async void refreshButton_Click(object sender, EventArgs e)
@@ -100,18 +128,17 @@ namespace Processes
 
         private async void scanButton_Click(object sender, EventArgs eargs)
         {
-            modulesDataGridView.Visible = true;
             scanButton.Enabled = false;
+            var oldText = scanButton.Text;
             scanButton.Text = "Scanning...";
             modulesDataGridView.Rows.Clear();
-
-            
+     
             await Task.Run(() =>
             {
                 var processList = new List<ProcessInfo>();
                 foreach(var row in processesDataGridView.SelectedRows.Cast<DataGridViewRow>())
                 {
-                    if (row != null && row.DataBoundItem is ProcessInfoRow proc)
+                    if (row?.DataBoundItem is ProcessInfoRow proc)
                     {
                         processList.Add(proc.info);
                     }
@@ -119,8 +146,25 @@ namespace Processes
                 Program.Scanner.BeginScan(processList, AddModuleHandler);
             });
             
-            scanButton.Text = "Scan";
+            scanButton.Text = oldText;
             scanButton.Enabled = true;
+        }
+
+        private async void scanKernelButton_Click(object sender, EventArgs e)
+        {
+            scanKernelButton.Enabled = false;
+            var oldText = scanKernelButton.Text;
+            scanKernelButton.Text = "Scanning...";
+            driverObjectDataGridView.Rows.Clear();
+
+            
+            foreach(var info in Program.Scanner.ScanKernel())
+            {
+                DriverObjectStore.Add(new DriverObjectInfoRow(info));
+            }
+
+            scanKernelButton.Text = oldText;
+            scanKernelButton.Enabled = true;
         }
     }
 }

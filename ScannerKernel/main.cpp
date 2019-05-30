@@ -6,72 +6,75 @@ UNICODE_STRING dev, dos; // Driver registry paths
 
 #define IO_SCANNER_KERNEL_REQUEST CTL_CODE(FILE_DEVICE_UNKNOWN, 0x1337, METHOD_BUFFERED, FILE_SPECIAL_ACCESS)
 
-enum EScanResult
-{
-	EUnknownError = 0,
-	ESafe = 1,
-	EDetected = 2,
-	EInvalidProcess = 3,
-	EUnknownIOCTL = 4
-};
-
-
-struct ScanRequest
-{
-	int m_ProcessId;
-	EScanResult m_Result;
-};
-
 NTSTATUS IoControl(PDEVICE_OBJECT pDeviceObject, PIRP pIrp)
 {
-	NTSTATUS Status = STATUS_UNSUCCESSFUL;
-	ULONG BytesIo = 0;
+	NTSTATUS status = STATUS_UNSUCCESSFUL;
+	ULONG bytes_io = 0;
 
-	PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(pIrp);
+	PIO_STACK_LOCATION stack = IoGetCurrentIrpStackLocation(pIrp);
 
-	ULONG ControlCode = Stack->Parameters.DeviceIoControl.IoControlCode;
-	ScanRequest* Buffer = (ScanRequest*)pIrp->AssociatedIrp.SystemBuffer;
-
-	DbgPrint("[ScannerKernel] IoControl called\n");
-
-	if (Buffer && Stack->Parameters.DeviceIoControl.InputBufferLength == sizeof(ScanRequest)
-		&& Stack->Parameters.DeviceIoControl.OutputBufferLength == sizeof(ScanRequest))
+	ULONG control_code = stack->Parameters.DeviceIoControl.IoControlCode;
+	if (control_code = IO_SCANNER_KERNEL_REQUEST)
 	{
-		if (ControlCode = IO_SCANNER_KERNEL_REQUEST)
+		DriverObjectArray* buffer = (DriverObjectArray*)pIrp->AssociatedIrp.SystemBuffer;
+		auto input_len = stack->Parameters.DeviceIoControl.InputBufferLength;
+		if (input_len >= sizeof(DriverObjectArray) && input_len >= (buffer->Max * sizeof(DriverObject) + 8))
 		{
-			/*PEPROCESS Process;
-			Status = PsLookupProcessByProcessId((HANDLE)Buffer->m_ProcessId, &Process);
-			if (NT_SUCCESS(Status))
-			{
-				Buffer->m_Result=ScanProcess(Process);
-				ObDereferenceObject(Process);
-			}
-			else //unable to get EPROCESS from id
-			{
-				DbgPrint("[ScannerKernel] unable to get EPROCESS\n");
-				Buffer->m_Result = EScanResult::EInvalidProcess;
-			}*/
+			DbgPrint("[ScannerKernel] %s: buffer_size %d, max objects %d\n", __FUNCTION__, input_len, buffer->Max);
+			buffer->Count = Scan(buffer->Array, buffer->Max);
+			bytes_io = input_len;
+			status = STATUS_SUCCESS;
 		}
-		else //wrong IOCTL
+		else
 		{
-			DbgPrint("[ScannerKernel] Wrong IOCTL\n");
-			Buffer->m_Result = EScanResult::EUnknownIOCTL;
-			Status = STATUS_NOT_IMPLEMENTED;
+			DbgPrint("[ScannerKernel] %s: buffer size mismatch, size %d\n", __FUNCTION__, input_len);
 		}
-		BytesIo = sizeof(ScanRequest);
 	}
-	else //smth wrong with IO buffer
+	else //wrong IOCTL
 	{
-		DbgPrint("[ScannerKernel] Error with buffer\n");
-		Status = STATUS_INVALID_PARAMETER;
+		DbgPrint("[ScannerKernel] %s: Wrong IOCTL\n", __FUNCTION__);
+		status = STATUS_NOT_IMPLEMENTED;
 	}
 
-
-	pIrp->IoStatus.Status = Status;
-	pIrp->IoStatus.Information = BytesIo;
+	pIrp->IoStatus.Status = status;
+	pIrp->IoStatus.Information = bytes_io;
 	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-	return Status;
+	return status;
+}
+
+NTSTATUS IoRead(PDEVICE_OBJECT pDeviceObject, PIRP pIrp)
+{
+	NTSTATUS status = STATUS_UNSUCCESSFUL;
+	ULONG bytes_io = 0;
+
+
+	auto buffer = (DriverObject*)MmGetSystemAddressForMdlSafe(pIrp->MdlAddress, LowPagePriority);
+	if (buffer)
+	{
+		auto output_size = MmGetMdlByteCount(pIrp->MdlAddress);
+		if (auto max_objects = output_size / sizeof(DriverObject))
+		{
+			bytes_io = Scan(buffer, max_objects) * sizeof(DriverObject);
+			status = STATUS_SUCCESS;
+			DbgPrint("[ScannerKernel] %s: successfully read %d bytes\n", __FUNCTION__, bytes_io);
+		}
+		else
+		{
+			DbgPrint("[ScannerKernel] %s: too small buffer %d\n", __FUNCTION__, output_size);
+			status = STATUS_BUFFER_TOO_SMALL;
+		}
+	}
+	else
+	{
+		DbgPrint("[ScannerKernel] %s: buffer nullptr\n", __FUNCTION__);
+	}
+
+	pIrp->IoStatus.Status = status;
+	pIrp->IoStatus.Information = bytes_io;
+	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+
+	return status;
 }
 
 NTSTATUS UnloadDriver(PDRIVER_OBJECT pDriverObject)
@@ -84,13 +87,13 @@ NTSTATUS UnloadDriver(PDRIVER_OBJECT pDriverObject)
 }
 
 
-NTSTATUS DispatchNotImplemented(PDEVICE_OBJECT pDeviceObject, PIRP pIrp)
+NTSTATUS MjSuccess(PDEVICE_OBJECT pDeviceObject, PIRP pIrp)
 {
-	pIrp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
+	pIrp->IoStatus.Status = STATUS_SUCCESS;
 	pIrp->IoStatus.Information = 0;
 
 	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
-	return STATUS_INVALID_DEVICE_REQUEST;
+	return STATUS_SUCCESS;
 }
 
 
@@ -107,20 +110,28 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT pDriverObject,
 		status = IoCreateSymbolicLink(&dos, &dev);
 		if (NT_SUCCESS(status))
 		{
-			for (int a = 0; a <= IRP_MJ_MAXIMUM_FUNCTION; a++) {
-				pDriverObject->MajorFunction[a] = DispatchNotImplemented;
-			}
+			pDriverObject->MajorFunction[IRP_MJ_CREATE] = MjSuccess;
+			pDriverObject->MajorFunction[IRP_MJ_CLOSE] = MjSuccess;
+			pDriverObject->MajorFunction[IRP_MJ_READ] = IoRead;
 			pDriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = IoControl;
 			pDriverObject->DriverUnload = (PDRIVER_UNLOAD)UnloadDriver;
 
 			g_pDeviceObject->Flags |= DO_DIRECT_IO;
-			g_pDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+			//g_pDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
 			DbgPrint("[ScannerKernel] Driver Loaded\n");
-
-			Scan();
+		}
+		else
+		{
+			IoDeleteDevice(g_pDeviceObject);
+			DbgPrint("[ScannerKernel] %s: IoCreateSymbolicLink failed, status 0x%X\n", __FUNCTION__, status);
 		}
 	}
+	else
+	{
+		DbgPrint("[ScannerKernel] %s: IoCreateDevice failed, status 0x%X\n", __FUNCTION__, status);
+	}
+
 	return status;
 }
 

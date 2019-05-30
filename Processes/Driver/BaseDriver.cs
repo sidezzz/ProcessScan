@@ -34,10 +34,10 @@ namespace Processes.Driver
         private void AdjustPrivilege()
         {
             bool enabled = false;
-            RtlAdjustPrivilege(10u, true, false, ref enabled);
-            if(!enabled)
+            var status = RtlAdjustPrivilege(10u, true, false, ref enabled);
+            if (status != NtStatus.Success && !enabled)
             {
-                throw new UnauthorizedAccessException("Can't adjust prevelege!");
+                throw new UnauthorizedAccessException($"Can't adjust prevelege! {status.ToString()}");
             }
         }
 
@@ -54,9 +54,11 @@ namespace Processes.Driver
         private string AddDriverToRegistry()
         {
             string registryPath = "System\\CurrentControlSet\\Services\\" + Path.GetFileNameWithoutExtension(FilePath);
-            var key = Registry.LocalMachine.CreateSubKey(registryPath);
-            key.SetValue("ImagePath", "System32\\drivers\\" + Path.GetFileName(FilePath));
-            key.SetValue("Type", 1);
+            using (var key = Registry.LocalMachine.CreateSubKey(registryPath))
+            {
+                key.SetValue("ImagePath", "System32\\drivers\\" + Path.GetFileName(FilePath));
+                key.SetValue("Type", 1);
+            }
             return "\\Registry\\Machine\\" + registryPath;
         }
 
@@ -92,10 +94,14 @@ namespace Processes.Driver
                     LoadDriver();
                     DriverHandle = CreateFile("\\\\.\\" + DeviceName, FileAccess.ReadWrite, FileShare.ReadWrite,
                     IntPtr.Zero, FileMode.Open, 0, IntPtr.Zero);
+                    if(DriverHandle.IsInvalid)
+                    {
+                        throw new Exception($"Can't get driver handle {"\\\\.\\" + DeviceName}, {Marshal.GetLastWin32Error()}");
+                    }
                 }
                 catch(Exception e)
                 {
-                    Logger.Log("LoadDriver exception: " + e.Message);
+                    Logger.Log($"LoadDriver exception: {e.Message}");
                     EnsureUnloaded();
                 }
             }
@@ -103,14 +109,31 @@ namespace Processes.Driver
 
         protected void EnsureUnloaded()
         {
-            if (DriverHandle.IsInvalid)
+            Logger.Log("EnsureUnloaded start unloading");
+
+            if(!DriverHandle.IsInvalid)
             {
+                try
+                {
+                    AddDriverToRegistry();
+                    AdjustPrivilege();
+
+                    var registryUnicode = new UNICODE_STRING("\\Registry\\Machine\\System\\CurrentControlSet\\Services\\"
+                        + Path.GetFileNameWithoutExtension(FilePath));
+                    var status = NtUnloadDriver(ref registryUnicode);
+                    if (status != NtStatus.Success)
+                    {
+                        Logger.Log($"NtUnloadDriver failed {status}");
+                    }
+                }
+                catch (Exception e)
+                {
+                    Logger.Log($"LoadDriver exception: {e.Message}");
+                    EnsureUnloaded();
+                }
+
                 DriverHandle.Close();
             }
-
-            var registryUnicode = new UNICODE_STRING("\\Registry\\Machine\\System\\CurrentControlSet\\Services\\" 
-                + Path.GetFileNameWithoutExtension(FilePath));
-            var Status = NtUnloadDriver(ref registryUnicode);
 
             RemoveDriverFromRegistry();
 
@@ -119,6 +142,7 @@ namespace Processes.Driver
                 File.Delete(Environment.SystemDirectory + "\\drivers\\" + Path.GetFileName(FilePath));
             }
             catch { }
+            Logger.Log("EnsureUnloaded end unloading");
         }
 
 
@@ -145,13 +169,13 @@ namespace Processes.Driver
         [DllImport("ntdll.dll")]
         private static extern NtStatus NtUnloadDriver(ref UNICODE_STRING SourceRegistry);
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        private static extern SafeFileHandle CreateFile(
-            string fileName,
-            [MarshalAs(UnmanagedType.U4)] FileAccess fileAccess,
-            [MarshalAs(UnmanagedType.U4)] FileShare fileShare,
-            IntPtr securityAttributes, // optional SECURITY_ATTRIBUTES structure can be passed
-            [MarshalAs(UnmanagedType.U4)] FileMode creationDisposition,
-            [MarshalAs(UnmanagedType.U4)] FileAttributes flagsAndAttributes,
-            IntPtr template);
+        static extern SafeFileHandle CreateFile(
+            string lpFileName,
+            [MarshalAs(UnmanagedType.U4)] FileAccess dwDesiredAccess,
+            [MarshalAs(UnmanagedType.U4)] FileShare dwShareMode,
+            IntPtr lpSecurityAttributes,
+            [MarshalAs(UnmanagedType.U4)] FileMode dwCreationDisposition,
+            [MarshalAs(UnmanagedType.U4)] FileAttributes dwFlagsAndAttributes,
+            IntPtr hTemplateFile);
     }
 }

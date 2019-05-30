@@ -8,24 +8,30 @@ using System.IO;
 using System.Drawing;
 using System.Diagnostics;
 
-namespace Processes.Scan
+namespace Processes.Scanning
 {
+
+    public class DriverObjectInfo
+    {
+        public string Name;
+        public string Result;
+    }
 
     public class ModuleInfo
     {
-        private ProcessModule Module;
-        public string Path => Module.FileName;
-        public string Name { get; }
+        public readonly string Path;
+        public readonly string Name;
         public string Result;
 
         public ModuleInfo(ProcessModule m, string processName)
         {
-            Module = m;
-            Name = $"[{processName}]->{Module.ModuleName}";
+            Path = m.FileName;
+            Name = $"[{processName}]->{m.ModuleName}";
             Result = "Success";
+            m.Dispose();
         }
     }
-    public class ProcessInfo
+    public class ProcessInfo : IDisposable
     {
         private Process Proc;
 
@@ -41,6 +47,22 @@ namespace Processes.Scan
             Path = Proc.MainModule.FileName;
             Name = Proc.ProcessName;
             PID = Proc.Id;
+        }
+
+        ~ProcessInfo()
+        {
+            Dispose();
+        }
+
+        private bool IsDisposed = false;
+        public void Dispose()
+        {
+            if (!IsDisposed)
+            {
+                Proc.Dispose();
+                Icon?.Dispose();
+                IsDisposed = true;
+            }
         }
 
         public List<ModuleInfo> GetModules()
@@ -64,15 +86,22 @@ namespace Processes.Scan
                 catch { }
             }
             return processList;
-            //return Process.GetProcesses().Select(p => new ProcessInfo(p)).ToList();
         }
 
-        public static byte[] StringToByteArray(string hex)
+        public static byte[] StringToByteArray(string str)
         {
-            return Enumerable.Range(0, hex.Length)
+            return Enumerable.Range(0, str.Length)
                              .Where(x => x % 2 == 0)
-                             .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
+                             .Select(x => Convert.ToByte(str.Substring(x, 2), 16))
                              .ToArray();
+        }
+
+        public static string ByteArrayToString(byte[] arr)
+        {
+            var sb = new StringBuilder();
+            foreach (var b in arr)
+                sb.Append(b.ToString("x2"));
+            return sb.ToString();
         }
 
         public static byte[] GetFileHash(byte[] file)

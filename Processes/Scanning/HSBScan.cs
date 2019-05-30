@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Security.Cryptography;
 using System.IO;
 
-namespace Processes.Scan
+namespace Processes.Scanning
 {
     class HSBScan : IModuleScan
     {
@@ -44,7 +44,7 @@ namespace Processes.Scan
 
         private readonly SortedDictionary<ComparableHash, string> HSBContainer;
         private bool IsInit;
-
+        private Task InitTask;
         public HSBScan()
         {
             HSBContainer = new SortedDictionary<ComparableHash, string>();
@@ -53,8 +53,10 @@ namespace Processes.Scan
 
         public ScanStatus Scan(string fileName, ref string result, byte[] cachedFile)
         {
-            while(!IsInit)
-            { Task.Delay(25).Wait(); }
+            if (!IsInit)
+            {
+                InitTask.Wait();
+            }
             try
             {
                 var hash = Utils.GetFileHash(cachedFile);
@@ -102,22 +104,23 @@ namespace Processes.Scan
             }
         }
 
-        private async void InitHSB()
+        private void InitHSB()
         {
-            await Task.Run(() =>
-            {
-                try
-                {
-                    Utils.ParseFileByLine("database\\daily.hsb", ParseHSBLine);
-                    Utils.ParseFileByLine("database\\daily.hdb", ParseHSBLine);
-                    Logger.Log($"InitHSB loaded {HSBContainer.Count} signatures");
-                }
-                catch (Exception e)
-                {
-                    Logger.Log($"InitHSB exception: {e.Message}");
-                }
-                IsInit = true;
-            });
+            InitTask = new Task(() =>
+             {
+                 try
+                 {
+                     Utils.ParseFileByLine("database\\daily.hsb", ParseHSBLine);
+                     Utils.ParseFileByLine("database\\daily.hdb", ParseHSBLine);
+                     Logger.Log($"InitHSB loaded {HSBContainer.Count} signatures");
+                 }
+                 catch (Exception e)
+                 {
+                     Logger.Log($"InitHSB exception: {e.Message}");
+                 }
+                 IsInit = true;
+             });
+            InitTask.Start();
         }
     }
 }

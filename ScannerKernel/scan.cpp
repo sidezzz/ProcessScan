@@ -2,6 +2,8 @@
 #include "ntos.h"
 #include <ntimage.h>
 
+#include "scan.hpp"
+
 typedef struct _RTL_PROCESS_MODULE_INFORMATION
 {
 	HANDLE Section;
@@ -220,8 +222,9 @@ bool IsInValidImage(PRTL_PROCESS_MODULES modules, void* address)
 	return 0;
 }
 
-void Scan()
+int Scan(DriverObject* array, int max)
 {
+	int saved_result_count = 0;
 	HANDLE directory_handle;
 	OBJECT_ATTRIBUTES attributes;
 	UNICODE_STRING path;
@@ -249,15 +252,27 @@ void Scan()
 							{
 								auto driver = PDRIVER_OBJECT(entry->Object);
 
+								auto result = EResult::Success;
 								for (int a = 0; a <= IRP_MJ_MAXIMUM_FUNCTION; a++)
 								{
 									if (!IsInValidImage(modules, driver->MajorFunction[a]))
 									{
+										result = EResult::Hijacked;
 										DbgPrint("[ScannerKernel] found hijacked driver %wZ, function %d, %p\n", driver->DriverName, a, driver->MajorFunction[a]);
 									}
 									else
 									{
 										DbgPrint("[ScannerKernel] driver %wZ, valid function %d\n", driver->DriverName, a);
+									}
+								}
+								if (saved_result_count < max)
+								{
+									if (driver->DriverName.Buffer)
+									{
+										memcpy(array[saved_result_count].Name, driver->DriverName.Buffer,
+											driver->DriverName.Length < 100 ? driver->DriverName.Length : 90);
+										array[saved_result_count].Result = result;
+										saved_result_count++;
 									}
 								}
 
@@ -293,4 +308,6 @@ void Scan()
 	{
 		DbgPrint("[ScannerKernel] %s: ZwOpenDirectoryObject failed, status 0x%X\n", __FUNCTION__, status);
 	}
+
+	return saved_result_count;
 }

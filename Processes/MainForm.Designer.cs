@@ -36,17 +36,24 @@
             this.scanButton = new System.Windows.Forms.Button();
             this.processPanel = new System.Windows.Forms.Panel();
             this.scanPanel = new System.Windows.Forms.Panel();
+            this.scanTabControl = new System.Windows.Forms.TabControl();
             this.modulesTabPage = new System.Windows.Forms.TabPage();
             this.modulesDataGridView = new System.Windows.Forms.DataGridView();
-            this.moduleResult = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.moduleName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.scanTabControl = new System.Windows.Forms.TabControl();
+            this.moduleResult = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.driverTabPage = new System.Windows.Forms.TabPage();
+            this.driverObjectDataGridView = new System.Windows.Forms.DataGridView();
+            this.scanKernelButton = new System.Windows.Forms.Button();
+            this.driverObjectName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.driverObjectResult = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.processesDataGridView)).BeginInit();
             this.processPanel.SuspendLayout();
             this.scanPanel.SuspendLayout();
+            this.scanTabControl.SuspendLayout();
             this.modulesTabPage.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.modulesDataGridView)).BeginInit();
-            this.scanTabControl.SuspendLayout();
+            this.driverTabPage.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.driverObjectDataGridView)).BeginInit();
             this.SuspendLayout();
             // 
             // refreshButton
@@ -145,6 +152,19 @@
             this.scanPanel.Size = new System.Drawing.Size(370, 682);
             this.scanPanel.TabIndex = 7;
             // 
+            // scanTabControl
+            // 
+            this.scanTabControl.Controls.Add(this.modulesTabPage);
+            this.scanTabControl.Controls.Add(this.driverTabPage);
+            this.scanTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.scanTabControl.Location = new System.Drawing.Point(10, 10);
+            this.scanTabControl.Multiline = true;
+            this.scanTabControl.Name = "scanTabControl";
+            this.scanTabControl.SelectedIndex = 0;
+            this.scanTabControl.Size = new System.Drawing.Size(350, 662);
+            this.scanTabControl.SizeMode = System.Windows.Forms.TabSizeMode.FillToRight;
+            this.scanTabControl.TabIndex = 6;
+            // 
             // modulesTabPage
             // 
             this.modulesTabPage.Controls.Add(this.modulesDataGridView);
@@ -175,7 +195,13 @@
             this.modulesDataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.modulesDataGridView.Size = new System.Drawing.Size(336, 630);
             this.modulesDataGridView.TabIndex = 2;
-            this.modulesDataGridView.Visible = false;
+            // 
+            // moduleName
+            // 
+            this.moduleName.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.moduleName.DataPropertyName = "name";
+            this.moduleName.HeaderText = "Name";
+            this.moduleName.Name = "moduleName";
             // 
             // moduleResult
             // 
@@ -185,30 +211,68 @@
             this.moduleResult.Name = "moduleResult";
             this.moduleResult.Width = 62;
             // 
-            // moduleName
+            // driverTabPage
             // 
-            this.moduleName.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.moduleName.DataPropertyName = "name";
-            this.moduleName.HeaderText = "Name";
-            this.moduleName.Name = "moduleName";
+            this.driverTabPage.Controls.Add(this.driverObjectDataGridView);
+            this.driverTabPage.Location = new System.Drawing.Point(4, 22);
+            this.driverTabPage.Name = "driverTabPage";
+            this.driverTabPage.Padding = new System.Windows.Forms.Padding(3);
+            this.driverTabPage.Size = new System.Drawing.Size(342, 636);
+            this.driverTabPage.TabIndex = 1;
+            this.driverTabPage.Text = "Driver Objects";
+            this.driverTabPage.UseVisualStyleBackColor = true;
             // 
-            // scanTabControl
+            // driverObjectDataGridView
             // 
-            this.scanTabControl.Controls.Add(this.modulesTabPage);
-            this.scanTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.scanTabControl.Location = new System.Drawing.Point(10, 10);
-            this.scanTabControl.Multiline = true;
-            this.scanTabControl.Name = "scanTabControl";
-            this.scanTabControl.SelectedIndex = 0;
-            this.scanTabControl.Size = new System.Drawing.Size(350, 662);
-            this.scanTabControl.SizeMode = System.Windows.Forms.TabSizeMode.FillToRight;
-            this.scanTabControl.TabIndex = 6;
+            this.driverObjectDataGridView.AllowUserToAddRows = false;
+            this.driverObjectDataGridView.AllowUserToDeleteRows = false;
+            this.driverObjectDataGridView.AllowUserToOrderColumns = true;
+            this.driverObjectDataGridView.AllowUserToResizeColumns = false;
+            this.driverObjectDataGridView.AllowUserToResizeRows = false;
+            this.driverObjectDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.driverObjectDataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.driverObjectName,
+            this.driverObjectResult});
+            this.driverObjectDataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.driverObjectDataGridView.Location = new System.Drawing.Point(3, 3);
+            this.driverObjectDataGridView.MultiSelect = false;
+            this.driverObjectDataGridView.Name = "driverObjectDataGridView";
+            this.driverObjectDataGridView.RowHeadersVisible = false;
+            this.driverObjectDataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.driverObjectDataGridView.Size = new System.Drawing.Size(336, 630);
+            this.driverObjectDataGridView.TabIndex = 0;
+            // 
+            // scanKernelButton
+            // 
+            this.scanKernelButton.Location = new System.Drawing.Point(393, 426);
+            this.scanKernelButton.Name = "scanKernelButton";
+            this.scanKernelButton.Size = new System.Drawing.Size(75, 23);
+            this.scanKernelButton.TabIndex = 8;
+            this.scanKernelButton.Text = "Scan Kernel";
+            this.scanKernelButton.UseVisualStyleBackColor = true;
+            this.scanKernelButton.Click += new System.EventHandler(this.scanKernelButton_Click);
+            // 
+            // driverObjectName
+            // 
+            this.driverObjectName.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.driverObjectName.DataPropertyName = "name";
+            this.driverObjectName.HeaderText = "Name";
+            this.driverObjectName.Name = "driverObjectName";
+            // 
+            // driverObjectResult
+            // 
+            this.driverObjectResult.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.driverObjectResult.DataPropertyName = "result";
+            this.driverObjectResult.HeaderText = "Result";
+            this.driverObjectResult.Name = "driverObjectResult";
+            this.driverObjectResult.Width = 62;
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(852, 682);
+            this.Controls.Add(this.scanKernelButton);
             this.Controls.Add(this.scanPanel);
             this.Controls.Add(this.processPanel);
             this.Controls.Add(this.scanButton);
@@ -218,9 +282,11 @@
             ((System.ComponentModel.ISupportInitialize)(this.processesDataGridView)).EndInit();
             this.processPanel.ResumeLayout(false);
             this.scanPanel.ResumeLayout(false);
+            this.scanTabControl.ResumeLayout(false);
             this.modulesTabPage.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.modulesDataGridView)).EndInit();
-            this.scanTabControl.ResumeLayout(false);
+            this.driverTabPage.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.driverObjectDataGridView)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -241,6 +307,11 @@
         private System.Windows.Forms.DataGridView modulesDataGridView;
         private System.Windows.Forms.DataGridViewTextBoxColumn moduleName;
         private System.Windows.Forms.DataGridViewTextBoxColumn moduleResult;
+        private System.Windows.Forms.TabPage driverTabPage;
+        private System.Windows.Forms.DataGridView driverObjectDataGridView;
+        private System.Windows.Forms.Button scanKernelButton;
+        private System.Windows.Forms.DataGridViewTextBoxColumn driverObjectName;
+        private System.Windows.Forms.DataGridViewTextBoxColumn driverObjectResult;
     }
 }
 

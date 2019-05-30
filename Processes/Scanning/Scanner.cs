@@ -11,7 +11,7 @@ using System.Collections;
 using System.Windows.Forms;
 using System.Collections.Concurrent;
 
-namespace Processes.Scan
+namespace Processes.Scanning
 {
     class Scanner
     {
@@ -21,6 +21,8 @@ namespace Processes.Scan
         private int CacheWins;
         private int CacheMisses;
 
+        public readonly Driver.DriverScanner KernelScanner;
+
 
         public Scanner()
         {
@@ -28,7 +30,8 @@ namespace Processes.Scan
             ScanMethods = new List<IModuleScan>();
             ScanMethods.Add(new WinTrustScan());
             ScanMethods.Add(new HSBScan());
-            ScanMethods.Add(new NDUScan());
+            //ScanMethods.Add(new NDUScan());
+            KernelScanner = new Driver.DriverScanner();
         }
 
 
@@ -100,6 +103,11 @@ namespace Processes.Scan
             {
                 Logger.Log($"ScanModule exception: {e.Message}");
             }
+        }
+
+        public List<DriverObjectInfo> ScanKernel()
+        {
+            return KernelScanner.ScanKernel();
         }
     }
 }
