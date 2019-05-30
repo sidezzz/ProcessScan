@@ -44,18 +44,13 @@ namespace Processes.Scan
             InitNDU();
         }
 
-        public ScanStatus Scan(string fileName, ref string result, ref byte[] cachedFile)
+        public ScanStatus Scan(string fileName, ref string result, byte[] cachedFile)
         {
             while (!IsInit)
             { Task.Delay(25).Wait(); }
 
             try
             {
-                if (cachedFile.Length == 0)
-                {
-                    cachedFile = File.ReadAllBytes(fileName);
-                }
-
                 var sb = new StringBuilder();
                 foreach (var b in cachedFile)
                     sb.Append(b.ToString("x2"));
@@ -66,13 +61,13 @@ namespace Processes.Scan
                 {
                     var offset = 0;
                     if(sig.Type==ExtendedSignature.OffsetType.EP)
-                    {
+                    { 
                         var entry=GetEntryRawOffset(cachedFile);
                         //Logger.Log(fileName+" Entry: " + entry.ToString());
                         offset = entry;
                     }
 
-                    if(sig.Signature.IsMatch(file,offset))//Regex.IsMatch(file, sig.Signature))
+                    if(sig.Signature.IsMatch(file, offset))//Regex.IsMatch(file, sig.Signature))
                     {
                         result = sig.Name;
                         return ScanStatus.Stop;

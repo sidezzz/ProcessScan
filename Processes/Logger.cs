@@ -10,33 +10,32 @@ namespace Processes
 {
     class Logger
     {
-        static readonly Lazy<Logger> lazy = new Lazy<Logger>(() => new Logger());
+        static readonly Lazy<Logger> LazyLogger = new Lazy<Logger>(() => new Logger());
 
-        FileStream logStream;
-        object sync;
+        StreamWriter LogWritter;
+        object WriteSync;
 
         private Logger()
         {
-            logStream = new FileStream("log.txt", FileMode.Append, FileAccess.Write, FileShare.Read);
-            sync = new object();
+            LogWritter = new StreamWriter("log.txt", true);
+            LogWritter.AutoFlush = true;
+            WriteSync = new object();
         }
 
-        public static Logger Instance => lazy.Value;
+        public static Logger Instance => LazyLogger.Value;
 
         public static void Log(string str)
         {
             try
             {
-                string text = "[" + DateTime.Now + "] " + str + "\n";
-                byte[] encodedText = Encoding.Unicode.GetBytes(text);
-                lock (Instance.sync)
+                lock (Instance.WriteSync)
                 {
-                    Instance.logStream.Write(encodedText, 0, encodedText.Length);
+                    Instance.LogWritter.WriteLine($"[{DateTime.Now}] {str}");
                 }
             }
             catch(Exception e)
             {
-                MessageBox.Show(e.ToString());
+                MessageBox.Show($"Log exception {e.ToString()}");
             }
         }
     }

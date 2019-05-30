@@ -26,6 +26,10 @@ namespace Processes.Driver
             EnsureLoaded();
         }
 
+        ~BaseDriver()
+        {
+            EnsureUnloaded();
+        }
 
         private void AdjustPrivilege()
         {
@@ -37,15 +41,26 @@ namespace Processes.Driver
             }
         }
 
+        private void RemoveDriverFromRegistry()
+        {
+            try
+            {
+                string registryPath = "System\\CurrentControlSet\\Services\\" + Path.GetFileNameWithoutExtension(FilePath);
+                Registry.LocalMachine.DeleteSubKey(registryPath);
+            }
+            catch { }
+        }
+
         private string AddDriverToRegistry()
         {
             string registryPath = "System\\CurrentControlSet\\Services\\" + Path.GetFileNameWithoutExtension(FilePath);
             var key = Registry.LocalMachine.CreateSubKey(registryPath);
             key.SetValue("ImagePath", "System32\\drivers\\" + Path.GetFileName(FilePath));
+            key.SetValue("Type", 1);
             return "\\Registry\\Machine\\" + registryPath;
         }
 
-        private void LoadDriver()
+        protected void LoadDriver()
         {
             try
             {
@@ -66,7 +81,7 @@ namespace Processes.Driver
             }
         }
 
-        private void EnsureLoaded()
+        protected void EnsureLoaded()
         {
             DriverHandle = CreateFile("\\\\.\\" + DeviceName, FileAccess.ReadWrite, FileShare.ReadWrite,
                     IntPtr.Zero, FileMode.Open, 0, IntPtr.Zero);
@@ -81,13 +96,29 @@ namespace Processes.Driver
                 catch(Exception e)
                 {
                     Logger.Log("LoadDriver exception: " + e.Message);
+                    EnsureUnloaded();
                 }
             }
         }
 
-        private bool EnsureUnloaded()
+        protected void EnsureUnloaded()
         {
-            return false;
+            if (DriverHandle.IsInvalid)
+            {
+                DriverHandle.Close();
+            }
+
+            var registryUnicode = new UNICODE_STRING("\\Registry\\Machine\\System\\CurrentControlSet\\Services\\" 
+                + Path.GetFileNameWithoutExtension(FilePath));
+            var Status = NtUnloadDriver(ref registryUnicode);
+
+            RemoveDriverFromRegistry();
+
+            try
+            {
+                File.Delete(Environment.SystemDirectory + "\\drivers\\" + Path.GetFileName(FilePath));
+            }
+            catch { }
         }
 
 

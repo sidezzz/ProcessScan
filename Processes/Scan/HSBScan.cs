@@ -51,16 +51,12 @@ namespace Processes.Scan
             InitHSB();
         }
 
-        public ScanStatus Scan(string fileName, ref string result, ref byte[] cachedFile)
+        public ScanStatus Scan(string fileName, ref string result, byte[] cachedFile)
         {
             while(!IsInit)
             { Task.Delay(25).Wait(); }
             try
             {
-                if (cachedFile.Length == 0)
-                {
-                    cachedFile = File.ReadAllBytes(fileName);
-                }
                 var hash = Utils.GetFileHash(cachedFile);
 
                 if (hash.Length == 0)
@@ -78,7 +74,7 @@ namespace Processes.Scan
             }
             catch (Exception e)
             {
-                Logger.Log("HSBScan exception: " + e.Message);
+                Logger.Log($"HSBScan exception: {e.Message}");
             }
             return ScanStatus.Continiue;
         }
@@ -102,7 +98,7 @@ namespace Processes.Scan
             }
             else
             {
-                Logger.Log("ParseHSBLine invalid line " + line);
+                Logger.Log($"ParseHSBLine invalid line {line}");
             }
         }
 
@@ -114,11 +110,11 @@ namespace Processes.Scan
                 {
                     Utils.ParseFileByLine("database\\daily.hsb", ParseHSBLine);
                     Utils.ParseFileByLine("database\\daily.hdb", ParseHSBLine);
-                    Logger.Log("InitHSB loaded " + HSBContainer.Count.ToString() + " signatures");
+                    Logger.Log($"InitHSB loaded {HSBContainer.Count} signatures");
                 }
                 catch (Exception e)
                 {
-                    Logger.Log("InitHSB exception: " + e.Message);
+                    Logger.Log($"InitHSB exception: {e.Message}");
                 }
                 IsInit = true;
             });

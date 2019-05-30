@@ -160,11 +160,12 @@ namespace Processes
             // call WinTrust.WinVerifyTrust() to check embedded file signature
             public static WinVerifyTrustResult VerifyEmbeddedSignature(string fileName)
             {
-                WinTrustData wtd = new WinTrustData(fileName);
-                Guid guidAction = new Guid(WINTRUST_ACTION_GENERIC_VERIFY_V2);
-                WinVerifyTrustResult result =  WinVerifyTrust(INVALID_HANDLE_VALUE, guidAction, wtd);
-                wtd.Dispose();
-                //bool ret = (result == WinVerifyTrustResult.Success);
+                var result = WinVerifyTrustResult.Success;
+                using (WinTrustData wtd = new WinTrustData(fileName))
+                {
+                    Guid guidAction = new Guid(WINTRUST_ACTION_GENERIC_VERIFY_V2);
+                    result = WinVerifyTrust(INVALID_HANDLE_VALUE, guidAction, wtd);
+                }
                 return result;
             }
             private WinTrust() { }

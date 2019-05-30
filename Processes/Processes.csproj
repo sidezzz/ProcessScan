@@ -65,7 +65,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Driver\BaseDriver.cs" />
-    <Compile Include="KernelController.cs" />
+    <Compile Include="Driver\DriverScanner.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
@@ -81,7 +81,7 @@
     <Compile Include="Scan\IModuleScan.cs" />
     <Compile Include="Scan\NDUScan.cs" />
     <Compile Include="Scan\WinTrustScan.cs" />
-    <Compile Include="Utils\Utils.cs" />
+    <Compile Include="Scan\Utils.cs" />
     <Compile Include="WinTrust.cs" />
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>

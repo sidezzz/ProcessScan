@@ -4,11 +4,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+using Processes.Scan;
+
 namespace Processes
 {
     static class Program
     {
-        static public Scan.Scanner scanner;
+        static private readonly Lazy<Scanner> lazyScanner = new Lazy<Scanner>(() => new Scanner());
+        public static Scanner Scanner => lazyScanner.Value;
         /// <summary>
         /// Главная точка входа для приложения.
         /// </summary>
@@ -17,7 +20,6 @@ namespace Processes
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            scanner = new Scan.Scanner();
             Application.Run(new MainForm());
         }
 

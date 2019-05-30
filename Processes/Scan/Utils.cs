@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Security.Cryptography;
 using System.IO;
 
-namespace Processes
+namespace Processes.Scan
 {
     sealed class Utils
     {

@@ -16,13 +16,11 @@ namespace Processes
     {
 
         private BindingList<ModuleInfoRow> ModuleStore = new BindingList<ModuleInfoRow>();
-        private BindingList<ScanProcessInfoRow> ProcessScanStore = new BindingList<ScanProcessInfoRow>();
 
         public MainForm()
         {
             InitializeComponent();
             modulesDataGridView.DataSource = ModuleStore;
-            processScanDataGridView.DataSource = ProcessScanStore;
 
             modulesDataGridView.RowsAdded += modulesDataGridView_RowsAdded;
         }
@@ -59,16 +57,6 @@ namespace Processes
                 this.info = info;
             }
         }
-
-        internal class ScanProcessInfoRow : ProcessInfoRow
-        {
-            public string Result => info.Result.ToString();
-            public ScanProcessInfoRow(ProcessInfo info)
-                :base(info)
-            {
-
-            }
-        }
         
         internal class ModuleInfoRow
         {
@@ -86,7 +74,7 @@ namespace Processes
 
         internal List<ProcessInfoRow> RefreshProcessGrid()
         {
-            return Program.scanner.Refresh().Select(p => new ProcessInfoRow(p)).ToList();
+            return Program.Scanner.GetProcessList().Select(p => new ProcessInfoRow(p)).ToList();
         }
 
         private async void refreshButton_Click(object sender, EventArgs e)
@@ -110,24 +98,12 @@ namespace Processes
             }
         }
 
-        private void AddProcessHandler(ProcessInfo info)
-        {
-            if (InvokeRequired)
-            {
-                processScanDataGridView.BeginInvoke((MethodInvoker)delegate ()
-                {
-                    ProcessScanStore.Add(new ScanProcessInfoRow(info));
-                });
-            }
-        }
-
         private async void scanButton_Click(object sender, EventArgs eargs)
         {
             modulesDataGridView.Visible = true;
             scanButton.Enabled = false;
             scanButton.Text = "Scanning...";
             modulesDataGridView.Rows.Clear();
-            processScanDataGridView.Rows.Clear();
 
             
             await Task.Run(() =>
@@ -140,7 +116,7 @@ namespace Processes
                         processList.Add(proc.info);
                     }
                 }
-                Program.scanner.BeginScan(processList, AddModuleHandler, AddProcessHandler);
+                Program.Scanner.BeginScan(processList, AddModuleHandler);
             });
             
             scanButton.Text = "Scan";

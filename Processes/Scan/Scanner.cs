@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Data;
 using System.Drawing;
 using System.Diagnostics;
+using System.IO;
 using System.Collections;
 using System.Windows.Forms;
 using System.Collections.Concurrent;
@@ -19,7 +20,6 @@ namespace Processes.Scan
         public string Path;
         public string Name;
         public int PID;
-        public Processes.Kernel.EScanResult Result;
     }
 
     public class ModuleInfo
@@ -31,127 +31,125 @@ namespace Processes.Scan
 
     class Scanner
     {
-        private List<IModuleScan> scanMethods;
+        private List<IModuleScan> ScanMethods;
 
-        private ConcurrentDictionary<string, string> cachedScanResult;
-        private int cacheWins;
+        private ConcurrentDictionary<string, string> ScanResultCache;
+        private int CacheWins;
+        private int CacheMisses;
 
 
         public Scanner()
         {
-            var k=Processes.Kernel.KernelController.getInstance();
-            cachedScanResult = new ConcurrentDictionary<string, string>();
-            scanMethods = new List<IModuleScan>();
-            scanMethods.Add(new WinTrustScan());
-            scanMethods.Add(new NDUScan());
-            scanMethods.Add(new HSBScan());
+            ScanResultCache = new ConcurrentDictionary<string, string>();
+            ScanMethods = new List<IModuleScan>();
+            ScanMethods.Add(new WinTrustScan());
+            ScanMethods.Add(new HSBScan());
+            ScanMethods.Add(new NDUScan());
         }
 
 
-        public List<ProcessInfo> Refresh()
+        public List<ProcessInfo> GetProcessList()
         {
-            var procs = Process.GetProcesses();
-            var ProcessList= new List<ProcessInfo>();
-            foreach (var p in procs)
+            var processList = new List<ProcessInfo>();
+            foreach (var process in Process.GetProcesses())
             {
                 try
                 {
                     var info = new ProcessInfo();
-                    info.Name = p.MainModule.ModuleName;
-                    info.Path = p.MainModule.FileName;
-                    info.Icon = Icon.ExtractAssociatedIcon(p.MainModule.FileName);
-                    info.PID = p.Id;
-                    ProcessList.Add(info);
-                    
+                    info.Name = process.MainModule.ModuleName;
+                    info.Path = process.MainModule.FileName;
+                    info.Icon = Icon.ExtractAssociatedIcon(process.MainModule.FileName);
+                    info.PID = process.Id;
+                    processList.Add(info);
                 }
-                catch(System.ComponentModel.Win32Exception e)
+                catch { }
+                /*catch(System.ComponentModel.Win32Exception e)
                 {
-                    Logger.Log("Refresh exception on process: \"" + p.ProcessName + "\" : " + e.Message);
+                    Logger.Log("Refresh exception on process: \"" + process.ProcessName + "\" : " + e.Message);
                 }
                 catch(Exception e)
                 {
                     Logger.Log("Refresh exception: " + e.Message);
-                }
+                }*/
             }
-            return ProcessList;
+            return processList;
         }
 
 
 
-        public void BeginScan(List<ProcessInfo> procs, Action<ModuleInfo> modulecallback, Action<ProcessInfo> infocallback)
+        public void BeginScan(List<ProcessInfo> processList, Action<ModuleInfo> addModuleCallback)
         {
-            //cachedScanResult.Clear();
-            cacheWins = 0;
+            CacheWins = 0;
+            CacheMisses = 0;
 
             Logger.Log("Started scanning...");
-            DateTime start = DateTime.Now;
-            Parallel.ForEach(procs, (proc) =>
+            var startTime = DateTime.Now;
+            Parallel.ForEach(processList, (process) =>
             {
                 try
                 {
-                    ScanProcess(proc, modulecallback, infocallback);                
+                    ScanProcess(process, addModuleCallback);                
                 }
                 catch (Exception e)
                 {
-                    Logger.Log("BeginScan exception: " + e.Message);
+                    Logger.Log($"BeginScan exception: {e.Message}");
                 }
             });
-            var scantime = DateTime.Now - start;
-            Logger.Log("Scan completed, scan time: " + scantime.TotalSeconds + " seconds, "
-                + cachedScanResult.Count+" unique files scanned, total count "+
-                (cachedScanResult.Count+cacheWins).ToString());
+            var scanTime = DateTime.Now - startTime;
+            Logger.Log($"Scan completed, scan time: {scanTime.TotalSeconds} seconds, " +
+                $"{CacheMisses} unique files scanned, " +
+                $"total count {(CacheWins + CacheMisses)}");
         }
 
-        public void ScanProcess(ProcessInfo info, Action<ModuleInfo> modulecallback, Action<ProcessInfo> infocallback)
+        public void ScanProcess(ProcessInfo info, Action<ModuleInfo> addModuleCallback)
         {
             try
             {
                 var proc = Process.GetProcessById(info.PID);
                 var modules = proc.Modules;
-                info.Result=Processes.Kernel.KernelController.getInstance().CheckProcess(info.PID);
-                infocallback(info);
-                Parallel.ForEach(modules.Cast<ProcessModule>(), (m) =>
+                Parallel.ForEach(modules.Cast<ProcessModule>(), (module) =>
                 {
-                    ScanModule(proc,m, modulecallback);
+                    ScanModule(proc, module, addModuleCallback);
                 });
             }
             catch (Exception e)
             {
-                Logger.Log("ScanProcess exception: " + e.Message);
+                Logger.Log($"ScanProcess exception: {e.Message}");
             }
         }
 
 
-        public void ScanModule(Process proc, ProcessModule m, Action<ModuleInfo> callback)
+        public void ScanModule(Process proc, ProcessModule module, Action<ModuleInfo> addModuleCallback)
         {
             try
             {
                 var info = new ModuleInfo();
-                info.Path = m.FileName;
-                info.Name = "[" + proc.ProcessName + "]->" + m.ModuleName;
+                info.Path = module.FileName;
+                info.Name = $"[{proc.ProcessName}]->{module.ModuleName}";
 
-                if (!cachedScanResult.TryGetValue(info.Path, out info.Result))
+                if (!ScanResultCache.TryGetValue(info.Path, out info.Result))
                 {
-                    byte[] cachedFile=new byte[0];
-                    foreach (var scan in scanMethods)
+                    byte[] cachedFile = File.ReadAllBytes(info.Path); ;
+                    foreach (var method in ScanMethods)
                     {
-                        if (scan.Scan(info.Path, ref info.Result, ref cachedFile) == ScanStatus.Stop)
+                        if (method.Scan(info.Path, ref info.Result, cachedFile) == ScanStatus.Stop)
                         {
                             break;
                         }
                     }
-                    cachedScanResult.TryAdd(info.Path, info.Result);
+                    ScanResultCache.TryAdd(info.Path, info.Result);
+                    Interlocked.Increment(ref CacheMisses);
                 }
                 else
                 {
-                    Interlocked.Increment(ref cacheWins);
+                    Interlocked.Increment(ref CacheWins);
                 }
-                callback(info);
+                addModuleCallback(info);
 
             }
             catch (Exception e)
             {
-                Logger.Log("ScanModule exception: " + e.Message);
+                Logger.Log($"ScanModule exception: {e.Message}");
             }
         }
     }

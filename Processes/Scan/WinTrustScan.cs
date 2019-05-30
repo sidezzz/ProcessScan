@@ -9,9 +9,9 @@ namespace Processes.Scan
 {
     class WinTrustScan : IModuleScan
     {
-        public ScanStatus Scan(string fileName, ref string result, ref byte[] cachedFile)
+        public ScanStatus Scan(string fileName, ref string result, byte[] cachedFile)
         {
-            if(WinTrust.VerifyEmbeddedSignature(fileName)==WinVerifyTrustResult.Success)
+            if(WinTrust.VerifyEmbeddedSignature(fileName) == WinVerifyTrustResult.Success)
             {
                 result = "Success";
                 return ScanStatus.Stop;
