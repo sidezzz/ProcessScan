@@ -19,6 +19,8 @@ namespace Processes.Driver
 
         protected SafeFileHandle DriverHandle = null;
 
+        public bool IsValid => !DriverHandle.IsInvalid;
+
         public BaseDriver(string path, string deviceName)
         {
             DeviceName = deviceName;
@@ -51,6 +53,15 @@ namespace Processes.Driver
             catch { }
         }
 
+        private void RemoveFromSystemDirectory()
+        {
+            try
+            {
+                File.Delete(Environment.SystemDirectory + "\\drivers\\" + Path.GetFileName(FilePath));
+            }
+            catch { }
+        }
+
         private string AddDriverToRegistry()
         {
             string registryPath = "System\\CurrentControlSet\\Services\\" + Path.GetFileNameWithoutExtension(FilePath);
@@ -64,11 +75,7 @@ namespace Processes.Driver
 
         protected void LoadDriver()
         {
-            try
-            {
-                File.Delete(Environment.SystemDirectory + "\\drivers\\" + Path.GetFileName(FilePath));
-            }
-            catch { }
+            RemoveFromSystemDirectory();
             File.Copy(FilePath, Environment.SystemDirectory + "\\drivers\\" + Path.GetFileName(FilePath));
 
             var registryPath = AddDriverToRegistry();
@@ -109,8 +116,6 @@ namespace Processes.Driver
 
         protected void EnsureUnloaded()
         {
-            Logger.Log("EnsureUnloaded start unloading");
-
             if(!DriverHandle.IsInvalid)
             {
                 try
@@ -136,13 +141,7 @@ namespace Processes.Driver
             }
 
             RemoveDriverFromRegistry();
-
-            try
-            {
-                File.Delete(Environment.SystemDirectory + "\\drivers\\" + Path.GetFileName(FilePath));
-            }
-            catch { }
-            Logger.Log("EnsureUnloaded end unloading");
+            RemoveFromSystemDirectory();
         }
 
 

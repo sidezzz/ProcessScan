@@ -26,6 +26,8 @@ namespace Processes
 
             driverObjectDataGridView.DataSource = DriverObjectStore;
             driverObjectDataGridView.RowsAdded += driverObjectDataGridView_RowsAdded;
+
+            scanKernelButton.Enabled = Program.Scanner.KernelScanner.IsValid;
         }
 
         private void modulesDataGridView_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
@@ -148,9 +150,10 @@ namespace Processes
             
             scanButton.Text = oldText;
             scanButton.Enabled = true;
+            scanTabControl.SelectedIndex = 0;
         }
 
-        private async void scanKernelButton_Click(object sender, EventArgs e)
+        private void scanKernelButton_Click(object sender, EventArgs e)
         {
             scanKernelButton.Enabled = false;
             var oldText = scanKernelButton.Text;
@@ -165,6 +168,7 @@ namespace Processes
 
             scanKernelButton.Text = oldText;
             scanKernelButton.Enabled = true;
+            scanTabControl.SelectedIndex = 1;
         }
     }
 }

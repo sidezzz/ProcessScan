@@ -43,17 +43,23 @@ namespace Processes.Driver
 
         public List<DriverObjectInfo> ScanKernel()
         {
+            if(DriverHandle.IsInvalid)
+            {
+                throw new Exception("No connection with kernel driver!");
+            }
             List<DriverObjectInfo> ret = new List<DriverObjectInfo>();
 
-            var driverObjects = new DriverObjectArray(0);
+            int count = 250;
+            IntPtr objectArray = Marshal.AllocHGlobal(Marshal.SizeOf<DriverObject>() * count);
             uint bytesRead = 0;
-            if (ReadFile(DriverHandle, ref driverObjects, (uint)Marshal.SizeOf(driverObjects), out bytesRead, IntPtr.Zero))
+            if (ReadFile(DriverHandle, objectArray, Marshal.SizeOf<DriverObject>() * count, out bytesRead, IntPtr.Zero))
             {
                 for (int a = 0; a < bytesRead / Marshal.SizeOf<DriverObject>(); a++)
                 {
+                    var obj = Marshal.PtrToStructure<DriverObject>(objectArray + Marshal.SizeOf<DriverObject>() * a);
                     var info = new DriverObjectInfo();
-                    info.Name = driverObjects.Array[a].Name;
-                    info.Result = driverObjects.Array[a].Result.ToString();
+                    info.Name = obj.Name;
+                    info.Result = obj.Result.ToString();
                     ret.Add(info);
                 }
             }
@@ -61,6 +67,7 @@ namespace Processes.Driver
             {
                 Logger.Log($"ReadFile error: {Marshal.GetLastWin32Error()}");
             }
+            Marshal.FreeHGlobal(objectArray);
 
             return ret;
         }
@@ -68,8 +75,8 @@ namespace Processes.Driver
         [DllImport("kernel32.dll", SetLastError = true)]
         static extern bool ReadFile(
             SafeFileHandle hFile,
-            [In, Out] ref DriverObjectArray OutBuffer,
-            uint nNumberOfBytesToRead,
+            IntPtr OutBuffer,
+            int nNumberOfBytesToRead,
             out uint lpNumberOfBytesRead,
             IntPtr lpOverlapped);
     }

@@ -53,16 +53,10 @@ namespace Processes.Scanning
         {
             Dispose();
         }
-
-        private bool IsDisposed = false;
         public void Dispose()
         {
-            if (!IsDisposed)
-            {
-                Proc.Dispose();
-                Icon?.Dispose();
-                IsDisposed = true;
-            }
+            Proc.Dispose();
+            Icon?.Dispose();
         }
 
         public List<ModuleInfo> GetModules()

@@ -16,6 +16,7 @@ NTSTATUS IoRead(PDEVICE_OBJECT pDeviceObject, PIRP pIrp)
 		auto output_size = MmGetMdlByteCount(pIrp->MdlAddress);
 		if (auto max_objects = output_size / sizeof(DriverObject))
 		{
+			RtlZeroMemory(buffer, output_size);
 			bytes_io = Scan(buffer, max_objects) * sizeof(DriverObject);
 			status = STATUS_SUCCESS;
 			DbgPrint("[ScannerKernel] %s: successfully read %d objects\n", __FUNCTION__, bytes_io / sizeof(DriverObject));

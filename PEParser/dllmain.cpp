@@ -94,16 +94,16 @@ struct DriverArray
 	DriverObject Array[3];
 };
 
-extern "C" __declspec(dllexport) void TestFunc(DriverArray* object_array)
+extern "C" __declspec(dllexport) void TestFunc(DriverObject* object_array, int count)
 {
 	char buf[123];
 	sprintf_s(buf, "%p", object_array);
 	MessageBoxA(0, buf, buf, 0);
-	for (int a = 0; a < object_array->Count; a++)
+	for (int a = 0; a < count; a++)
 	{
 		sizeof(DriverArray);
-		memcpy(object_array->Array[a].Name, L"suka", sizeof(L"suka"));
-		object_array->Array[a].Result = a;
+		memcpy(object_array[a].Name, L"suka", sizeof(L"suka"));
+		object_array[a].Result = a;
 	}
 }
 
