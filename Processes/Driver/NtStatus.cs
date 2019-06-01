@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Processes
 {
-    namespace Processes.Kernel
+    namespace Processes.Driver
     {
         public enum NtStatus : uint
         {

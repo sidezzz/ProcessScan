@@ -17,21 +17,24 @@ namespace Processes.Scanning
             public enum OffsetType
             {
                 Any,
-                EOF,
-                EP
+                EndOfFile,
+                EntryPoint,
+                Section
             }
 
             public string Name;
             public Regex Signature;
             public OffsetType Type;
             public int Offset;
+            public int Shift;
             public int Section;
-            public ExtendedSignature(string name, string sig, OffsetType type, int offset)
+            public ExtendedSignature(string name, string sig, OffsetType type, int offset, int shift)
             {
                 Name = name;
                 Signature = new Regex(sig);
                 Type = type;
                 Offset = offset;
+                Shift = shift;
             }
         }
 
@@ -57,18 +60,43 @@ namespace Processes.Scanning
 
                 foreach (var sig in NDUContainer)
                 {
-                    var offset = 0;
-                    if(sig.Type==ExtendedSignature.OffsetType.EP)
-                    { 
-                        var entry=GetEntryRawOffset(cachedFile);
-                        //Logger.Log(fileName+" Entry: " + entry.ToString());
-                        offset = entry;
-                    }
-
-                    if(sig.Signature.IsMatch(file, offset))//Regex.IsMatch(file, sig.Signature))
+                    try
                     {
-                        result = sig.Name;
-                        return ScanStatus.Stop;
+                        if (sig.Offset + sig.Shift > file.Length)
+                            continue;
+                        var offset = sig.Offset;
+                        if (sig.Type == ExtendedSignature.OffsetType.EntryPoint)
+                        {
+                            var entry = GetEntryRawOffset(cachedFile);
+                            //Logger.Log(fileName+" Entry: " + entry.ToString());
+                            offset += entry;
+                        }
+                        else if (sig.Type == ExtendedSignature.OffsetType.EndOfFile)
+                        {
+                            offset = file.Length - sig.Offset;
+                        }
+
+                        if (sig.Shift > 0)
+                        {
+                            var scanRange = file.Substring(offset, sig.Shift);
+                            if (sig.Signature.IsMatch(scanRange))
+                            {
+                                result = sig.Name;
+                                return ScanStatus.Stop;
+                            }
+                        }
+                        else
+                        {
+                            if (sig.Signature.IsMatch(file, offset))
+                            {
+                                result = sig.Name;
+                                return ScanStatus.Stop;
+                            }
+                        }
+                    }
+                    catch(Exception e)
+                    {
+                        Logger.Log($"NDUScan exception: {sig.Name}, {e.Message}");
                     }
                 }
             }
@@ -84,7 +112,7 @@ namespace Processes.Scanning
         private string ParseSignature(string sig)
         {
             var ret = sig.Replace('?','.');
-            ret=ret.Replace("*", ".*");
+            ret = ret.Replace("*", ".*");
 
             ret = ret.Replace("{", ".{");
             ret = ret.Replace("{-", "{0,");
@@ -92,9 +120,6 @@ namespace Processes.Scanning
             ret = ret.Replace("-", ",");
             ret = ret.Replace("[", ".{");
             ret = ret.Replace("]", "}");
-            //ret.Replace()
-
-            //Logger.Log("ParseSignature " + sig+" -> "+ ret);
 
             return ret;
         }
@@ -104,46 +129,39 @@ namespace Processes.Scanning
 
         private void ParseNDULine(string line)
         {
-            var words = line.Split(':');
-            if (words.Length > 3)
+            var signatureFields = line.Split(':');
+            if (signatureFields.Length > 3)
             {
-                if (words[1] == "1")
+                var type = signatureFields[1];
+                if (type == "1")
                 {
-                    ExtendedSignature.OffsetType type = ExtendedSignature.OffsetType.Any;
+                    ExtendedSignature.OffsetType offsetType = ExtendedSignature.OffsetType.Any;
                     int offset = 0;
-                    if (words[2] != "*")
+                    int shift = 0;
+                    var offsetExpression = signatureFields[2];
+                    if (offsetExpression != "*")
                     {
-                        var offsetLine = words[2].Split(new char[] { '+', '-' });
-                        if(offsetLine.Length==1)
+                        var offsetExpressionParts = offsetExpression.Split(',');
+                        if(offsetExpressionParts.Length > 1)
                         {
-                            //offsetLine
-                            try
-                            {
-                                offset = Int32.Parse(offsetLine[0]);
-                            }
-                            catch(Exception e)
-                            {
-                                Logger.Log("Int32.Parse exception: "  + words[2]);
-                            }
+                            shift = Int32.Parse(offsetExpressionParts[1]);
                         }
-                        else if(offsetLine.Length==2)
+
+                        var offsetLine = offsetExpressionParts[0].Split(new char[] { '+', '-' });
+                        if (offsetLine.Length == 1)
                         {
-                            try
+                            offset = Int32.Parse(offsetLine[0]);
+                        }
+                        else if (offsetLine.Length == 2)
+                        {
+                            offset = Int32.Parse(offsetLine[1]);
+                            if (offsetLine[0] == "EP")
                             {
-                                offset = Int32.Parse(offsetLine[1]);
+                                offsetType = ExtendedSignature.OffsetType.EntryPoint;
                             }
-                            catch (Exception e)
+                            else if (offsetLine[0] == "EOF")
                             {
-                                Logger.Log("Int32.Parse exception: " + words[2]);
-                            }
-                            if (offsetLine[0]=="EP")
-                            {
-                                type = ExtendedSignature.OffsetType.EP;
-                                Logger.Log("NDULine EP " + offset.ToString());
-                            }
-                            else if(offsetLine[0]=="EOF")
-                            {
-                                type = ExtendedSignature.OffsetType.EOF;
+                                offsetType = ExtendedSignature.OffsetType.EndOfFile;
                                 Logger.Log("NDULine EOF " + offset.ToString());
                             }
                             else
@@ -153,7 +171,8 @@ namespace Processes.Scanning
                         }
                     }
 
-                    NDUContainer.Add(new ExtendedSignature(words[0], ParseSignature(words[3]), type, offset));
+                    NDUContainer.Add(new ExtendedSignature(signatureFields[0],
+                        ParseSignature(signatureFields[3]), offsetType, offset, shift));
                 }
                 else
                 {

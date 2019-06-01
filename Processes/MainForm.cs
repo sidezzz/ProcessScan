@@ -13,16 +13,20 @@ namespace Processes
 {
     public partial class MainForm : Form
     {
+        private SortableBindingList<ProcessInfoRow> ProcessStore = new SortableBindingList<ProcessInfoRow>();
 
-        private BindingList<ModuleInfoRow> ModuleStore = new BindingList<ModuleInfoRow>();
+        private SortableBindingList<ModuleInfoRow> ModuleStore = new SortableBindingList<ModuleInfoRow>();
         private BindingList<DriverObjectInfoRow> DriverObjectStore = new BindingList<DriverObjectInfoRow>();
 
         public MainForm()
         {
             InitializeComponent();
 
+            processesDataGridView.DataSource = ProcessStore;
+
             modulesDataGridView.DataSource = ModuleStore;
             modulesDataGridView.RowsAdded += modulesDataGridView_RowsAdded;
+            modulesDataGridView.Sorted += modulesDataGridView_Sorted;
 
             driverObjectDataGridView.DataSource = DriverObjectStore;
             driverObjectDataGridView.RowsAdded += driverObjectDataGridView_RowsAdded;
@@ -30,23 +34,35 @@ namespace Processes
             scanKernelButton.Enabled = Program.Scanner.KernelScanner.IsValid;
         }
 
-        private void modulesDataGridView_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
+
+        void SetRowColor(DataGridViewRow row)
         {
-            var status = modulesDataGridView.Rows[e.RowIndex].Cells["moduleResult"].Value as string;
+            var status = row.Cells["moduleResult"].Value as string;
 
             if (status == "Success")
             {
-                //modulesDataGridView.Rows[e.RowIndex].DefaultCellStyle.BackColor = Color.Green;
+                row.DefaultCellStyle.BackColor = Color.White;
             }
             else if (status == "Unsafe")
             {
-                modulesDataGridView.Rows[e.RowIndex].DefaultCellStyle.BackColor = Color.Yellow;
+                row.DefaultCellStyle.BackColor = Color.Yellow;
             }
             else
             {
-                modulesDataGridView.Rows[e.RowIndex].DefaultCellStyle.BackColor = Color.Red;
+                row.DefaultCellStyle.BackColor = Color.Red;
             }
+        }
+        private void modulesDataGridView_Sorted(object sender, EventArgs e)
+        {
+            for (int a = 0; a < modulesDataGridView.Rows.Count; a++)
+            {
+                SetRowColor(modulesDataGridView.Rows[a]);
+            }
+        }
 
+        private void modulesDataGridView_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
+        {
+            SetRowColor(modulesDataGridView.Rows[e.RowIndex]);
         }
 
         private void driverObjectDataGridView_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
@@ -111,7 +127,9 @@ namespace Processes
         {
             refreshButton.Enabled = false;
             refreshButton.Text = "Refreshing...";
-            processesDataGridView.DataSource = await Task.Run(() => RefreshProcessGrid());
+            var processList = await Task.Run(() => RefreshProcessGrid());
+            ProcessStore.Clear();
+            ProcessStore.AddRange(processList);
             refreshButton.Text = "Refresh";
             refreshButton.Enabled = true;
         }
@@ -124,6 +142,7 @@ namespace Processes
                 modulesDataGridView.BeginInvoke((MethodInvoker)delegate ()
                 {
                     ModuleStore.Add(new ModuleInfoRow(info));
+                    //ModuleStore
                 });
             }
         }

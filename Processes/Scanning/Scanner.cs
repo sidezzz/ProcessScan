@@ -30,7 +30,7 @@ namespace Processes.Scanning
             ScanMethods = new List<IModuleScan>();
             ScanMethods.Add(new WinTrustScan());
             ScanMethods.Add(new HSBScan());
-            //ScanMethods.Add(new NDUScan());
+            ScanMethods.Add(new NDUScan());
             KernelScanner = new Driver.DriverScanner();
         }
 

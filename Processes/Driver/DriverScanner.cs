@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using Processes.Scanning;
 using Microsoft.Win32.SafeHandles;
-using Processes.Processes.Kernel;
+using Processes.Processes.Driver;
 
 namespace Processes.Driver
 {

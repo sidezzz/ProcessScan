@@ -43,9 +43,9 @@
             this.moduleResult = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.driverTabPage = new System.Windows.Forms.TabPage();
             this.driverObjectDataGridView = new System.Windows.Forms.DataGridView();
-            this.scanKernelButton = new System.Windows.Forms.Button();
             this.driverObjectName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.driverObjectResult = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.scanKernelButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.processesDataGridView)).BeginInit();
             this.processPanel.SuspendLayout();
             this.scanPanel.SuspendLayout();
@@ -242,16 +242,6 @@
             this.driverObjectDataGridView.Size = new System.Drawing.Size(336, 630);
             this.driverObjectDataGridView.TabIndex = 0;
             // 
-            // scanKernelButton
-            // 
-            this.scanKernelButton.Location = new System.Drawing.Point(393, 426);
-            this.scanKernelButton.Name = "scanKernelButton";
-            this.scanKernelButton.Size = new System.Drawing.Size(75, 23);
-            this.scanKernelButton.TabIndex = 8;
-            this.scanKernelButton.Text = "Scan Kernel";
-            this.scanKernelButton.UseVisualStyleBackColor = true;
-            this.scanKernelButton.Click += new System.EventHandler(this.scanKernelButton_Click);
-            // 
             // driverObjectName
             // 
             this.driverObjectName.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
@@ -266,6 +256,16 @@
             this.driverObjectResult.HeaderText = "Result";
             this.driverObjectResult.Name = "driverObjectResult";
             this.driverObjectResult.Width = 62;
+            // 
+            // scanKernelButton
+            // 
+            this.scanKernelButton.Location = new System.Drawing.Point(393, 426);
+            this.scanKernelButton.Name = "scanKernelButton";
+            this.scanKernelButton.Size = new System.Drawing.Size(75, 23);
+            this.scanKernelButton.TabIndex = 8;
+            this.scanKernelButton.Text = "Scan Kernel";
+            this.scanKernelButton.UseVisualStyleBackColor = true;
+            this.scanKernelButton.Click += new System.EventHandler(this.scanKernelButton_Click);
             // 
             // MainForm
             // 
