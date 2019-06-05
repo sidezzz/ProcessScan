@@ -26,7 +26,7 @@ namespace Processes.Scanning
         public ModuleInfo(ProcessModule m, string processName)
         {
             Path = m.FileName;
-            Name = $"[{processName}]->{m.ModuleName}";
+            Name = m.ModuleName;//$"[{processName}]->{m.ModuleName}";
             Result = "Success";
             m.Dispose();
         }

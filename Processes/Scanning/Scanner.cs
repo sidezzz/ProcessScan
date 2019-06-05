@@ -30,7 +30,7 @@ namespace Processes.Scanning
             ScanMethods = new List<IModuleScan>();
             ScanMethods.Add(new WinTrustScan());
             ScanMethods.Add(new HSBScan());
-            ScanMethods.Add(new NDUScan());
+            //ScanMethods.Add(new NDUScan());
             KernelScanner = new Driver.DriverScanner();
         }
 
@@ -79,9 +79,12 @@ namespace Processes.Scanning
         {
             try
             {
-                if (!ScanResultCache.TryGetValue(moduleInfo.Path, out moduleInfo.Result))
+                if (!ScanResultCache.TryGetValue(moduleInfo.Path.ToLower(), out moduleInfo.Result))
                 {
-                    byte[] cachedFile = File.ReadAllBytes(moduleInfo.Path); ;
+                    ScanResultCache.TryAdd(moduleInfo.Path.ToLower(), null);
+                    byte[] cachedFile = File.ReadAllBytes(moduleInfo.Path);
+
+                    var startTime = DateTime.Now;
                     foreach (var method in ScanMethods)
                     {
                         if (method.Scan(moduleInfo.Path, ref moduleInfo.Result, cachedFile) == ScanStatus.Stop)
@@ -89,14 +92,21 @@ namespace Processes.Scanning
                             break;
                         }
                     }
-                    ScanResultCache.TryAdd(moduleInfo.Path, moduleInfo.Result);
+                    var scanTime = DateTime.Now - startTime;
+                    Logger.Log($"Scan {moduleInfo.Path} completed, scan time: {scanTime.TotalSeconds} seconds");
+
+                    ScanResultCache.TryAdd(moduleInfo.Path.ToLower(), moduleInfo.Result);
                     Interlocked.Increment(ref CacheMisses);
                 }
                 else
                 {
                     Interlocked.Increment(ref CacheWins);
                 }
-                addModuleCallback(moduleInfo);
+
+                if (moduleInfo.Result != null)
+                {
+                    addModuleCallback(moduleInfo);
+                }
 
             }
             catch (Exception e)

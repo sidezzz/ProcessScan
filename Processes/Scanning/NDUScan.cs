@@ -31,7 +31,7 @@ namespace Processes.Scanning
             public ExtendedSignature(string name, string sig, OffsetType type, int offset, int shift)
             {
                 Name = name;
-                Signature = new Regex(sig);
+                Signature = new Regex(sig, RegexOptions.Compiled);
                 Type = type;
                 Offset = offset;
                 Shift = shift;
@@ -133,7 +133,7 @@ namespace Processes.Scanning
             if (signatureFields.Length > 3)
             {
                 var type = signatureFields[1];
-                if (type == "0" || type == "1")
+                if (type == "1")// || type == "0")
                 {
                     ExtendedSignature.OffsetType offsetType = ExtendedSignature.OffsetType.Any;
                     int offset = 0;
