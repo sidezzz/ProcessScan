@@ -133,7 +133,7 @@ namespace Processes.Scanning
             if (signatureFields.Length > 3)
             {
                 var type = signatureFields[1];
-                if (type == "1")
+                if (type == "0" || type == "1")
                 {
                     ExtendedSignature.OffsetType offsetType = ExtendedSignature.OffsetType.Any;
                     int offset = 0;

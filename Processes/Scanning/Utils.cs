@@ -65,7 +65,7 @@ namespace Processes.Scanning
         }
     }
 
-    sealed class Utils
+    static class Utils
     {
 
         public static List<ProcessInfo> GetProcessList()
