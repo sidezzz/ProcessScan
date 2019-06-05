@@ -12,38 +12,28 @@ namespace Processes.Scanning
     {
         public class ComparableHash : IComparable
         {
-            public byte[] ByteHash;
-            public int FileSize;
-            public ComparableHash(string hash, int fileSize)
+            public byte[] byteHash;
+            public ComparableHash(string hash)
             {
-                ByteHash = Utils.StringToByteArray(hash);
-                FileSize = fileSize;
+                byteHash = Utils.StringToByteArray(hash);
             }
-            public ComparableHash(byte[] hash, int fileSize)
+            public ComparableHash(byte[] hash)
             {
-                ByteHash = hash;
-                FileSize = fileSize;
+                byteHash = hash;
             }
             public int CompareTo(object obj)
             {
                 ComparableHash otherHash = obj as ComparableHash;
                 if (otherHash != null)
                 {
-                    if (FileSize == 0 || otherHash.FileSize == 0 || FileSize == otherHash.FileSize)
+                    for (int a = 0; a < byteHash.Length; a++)
                     {
-                        for (int a = 0; a < ByteHash.Length; a++)
+                        if (byteHash[a] != otherHash.byteHash[a])
                         {
-                            if (ByteHash[a] != otherHash.ByteHash[a])
-                            {
-                                return ByteHash[a] - otherHash.ByteHash[a];
-                            }
+                            return byteHash[a] - otherHash.byteHash[a];
                         }
-                        return 0;
                     }
-                    else
-                    {
-                        return FileSize - otherHash.FileSize;
-                    }
+                    return 0;
                 }
                 else
                 {
@@ -52,11 +42,12 @@ namespace Processes.Scanning
             }
         }
 
-        private readonly SortedDictionary<ComparableHash, string> HSBContainer = new SortedDictionary<ComparableHash, string>();
+        private readonly SortedDictionary<ComparableHash, string> HSBContainer;
         private bool IsInit;
         private Task InitTask;
         public HSBScan()
         {
+            HSBContainer = new SortedDictionary<ComparableHash, string>();
             InitHSB();
         }
 
@@ -75,8 +66,8 @@ namespace Processes.Scanning
                     throw new Exception("Invalid file hash");
                 }
 
-                string outResult = "";
-                if (HSBContainer.TryGetValue(new ComparableHash(hash, cachedFile.Length), out outResult))
+                string outResult="";
+                if (HSBContainer.TryGetValue(new ComparableHash(hash), out outResult))
                 {
                     result = outResult;
                     return ScanStatus.Stop;
@@ -97,20 +88,13 @@ namespace Processes.Scanning
             {
                 if (words[0].Length == 32)
                 {
-
-                    int fileSize = 0;
-                    if(words[1] != "*")
-                    {
-                        fileSize = Int32.Parse(words[1]);
-                    }
-
                     try
                     {
-                        HSBContainer.Add(new ComparableHash(words[0], fileSize), words[2]);
+                        HSBContainer.Add(new ComparableHash(words[0]), words[2]);
                     }
                     catch(ArgumentException)
                     {
-                        //Logger.Log($"ParseHSBLine exception {e.Message} {words[0]}");
+
                     }
                 }
             }
