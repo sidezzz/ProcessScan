@@ -135,14 +135,30 @@ namespace Processes
         }
 
 
-        private void AddModuleHandler(ModuleInfo info)
+
+        HashSet<string> ExistedModules = new HashSet<string>();
+        private void OnModuleAdd(ModuleInfo info)
         {
             if (InvokeRequired)
             {
                 modulesDataGridView.BeginInvoke((MethodInvoker)delegate ()
                 {
-                    ModuleStore.Add(new ModuleInfoRow(info));
-                    //ModuleStore
+                    if (!ExistedModules.Contains(info.Path))
+                    {
+                        ModuleStore.Add(new ModuleInfoRow(info));
+                        ExistedModules.Add(info.Path);
+                    }
+                });
+            }
+        }
+
+        private void OnModuleScanned()
+        {
+            if (InvokeRequired)
+            {
+                scanProgressBar.BeginInvoke((MethodInvoker)delegate ()
+                {
+                    scanProgressBar.Value++;
                 });
             }
         }
@@ -153,20 +169,30 @@ namespace Processes
             var oldText = scanButton.Text;
             scanButton.Text = "Scanning...";
             modulesDataGridView.Rows.Clear();
-     
+            ExistedModules.Clear();
+
+            scanProgressBar.Value = 0;
             await Task.Run(() =>
             {
+                int moduleCount = 0;
                 var processList = new List<ProcessInfo>();
                 foreach(var row in processesDataGridView.SelectedRows.Cast<DataGridViewRow>())
                 {
                     if (row?.DataBoundItem is ProcessInfoRow proc)
                     {
+                        moduleCount+= proc.info.Modules.Count; ;
                         processList.Add(proc.info);
                     }
                 }
-                Program.Scanner.BeginScan(processList, AddModuleHandler);
+                scanProgressBar.BeginInvoke((MethodInvoker)delegate ()
+                {
+                    scanProgressBar.Maximum = moduleCount;
+                });
+
+                Program.Scanner.BeginScan(processList, OnModuleAdd, OnModuleScanned);
             });
-            
+
+            scanProgressBar.Value = scanProgressBar.Maximum;
             scanButton.Text = oldText;
             scanButton.Enabled = true;
             scanTabControl.SelectedIndex = 0;

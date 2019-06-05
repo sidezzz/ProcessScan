@@ -7,6 +7,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using Microsoft.Win32;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 namespace Processes.Scanning
 {
@@ -27,7 +28,6 @@ namespace Processes.Scanning
             public OffsetType Type;
             public int Offset;
             public int Shift;
-            public int Section;
             public ExtendedSignature(string name, string sig, OffsetType type, int offset, int shift)
             {
                 Name = name;
@@ -111,15 +111,18 @@ namespace Processes.Scanning
 
         private string ParseSignature(string sig)
         {
-            var ret = sig.Replace('?','.');
-            ret = ret.Replace("*", ".*");
+            var ret = sig.ToLower();
+            ret = ret.Replace('?','.');
+            ret = ret.Replace("*", "(?>.*)");
 
             ret = ret.Replace("{", ".{");
             ret = ret.Replace("{-", "{0,");
 
-            ret = ret.Replace("-", ",");
+            ret = ret.Replace('-', ',');
             ret = ret.Replace("[", ".{");
-            ret = ret.Replace("]", "}");
+            ret = ret.Replace(']', '}');
+
+            //ret = ret.Replace("}", "})");
 
             return ret;
         }

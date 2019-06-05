@@ -46,6 +46,7 @@
             this.driverObjectName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.driverObjectResult = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.scanKernelButton = new System.Windows.Forms.Button();
+            this.scanProgressBar = new System.Windows.Forms.ProgressBar();
             ((System.ComponentModel.ISupportInitialize)(this.processesDataGridView)).BeginInit();
             this.processPanel.SuspendLayout();
             this.scanPanel.SuspendLayout();
@@ -59,7 +60,7 @@
             // refreshButton
             // 
             this.refreshButton.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.refreshButton.Location = new System.Drawing.Point(10, 649);
+            this.refreshButton.Location = new System.Drawing.Point(10, 653);
             this.refreshButton.Name = "refreshButton";
             this.refreshButton.Size = new System.Drawing.Size(352, 23);
             this.refreshButton.TabIndex = 0;
@@ -86,7 +87,7 @@
             this.processesDataGridView.ReadOnly = true;
             this.processesDataGridView.RowHeadersVisible = false;
             this.processesDataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.processesDataGridView.Size = new System.Drawing.Size(352, 639);
+            this.processesDataGridView.Size = new System.Drawing.Size(352, 643);
             this.processesDataGridView.TabIndex = 1;
             // 
             // processIconDataGridViewImageColumn
@@ -118,7 +119,7 @@
             // 
             // scanButton
             // 
-            this.scanButton.Location = new System.Drawing.Point(393, 455);
+            this.scanButton.Location = new System.Drawing.Point(401, 456);
             this.scanButton.Name = "scanButton";
             this.scanButton.Size = new System.Drawing.Size(75, 23);
             this.scanButton.TabIndex = 3;
@@ -135,7 +136,7 @@
             this.processPanel.MinimumSize = new System.Drawing.Size(100, 0);
             this.processPanel.Name = "processPanel";
             this.processPanel.Padding = new System.Windows.Forms.Padding(10);
-            this.processPanel.Size = new System.Drawing.Size(372, 682);
+            this.processPanel.Size = new System.Drawing.Size(372, 686);
             this.processPanel.TabIndex = 4;
             // 
             // scanPanel
@@ -145,11 +146,11 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.scanPanel.AutoSize = true;
             this.scanPanel.Controls.Add(this.scanTabControl);
-            this.scanPanel.Location = new System.Drawing.Point(490, 0);
+            this.scanPanel.Location = new System.Drawing.Point(495, 0);
             this.scanPanel.MaximumSize = new System.Drawing.Size(10000, 10000);
             this.scanPanel.Name = "scanPanel";
             this.scanPanel.Padding = new System.Windows.Forms.Padding(10);
-            this.scanPanel.Size = new System.Drawing.Size(370, 682);
+            this.scanPanel.Size = new System.Drawing.Size(382, 686);
             this.scanPanel.TabIndex = 7;
             // 
             // scanTabControl
@@ -161,7 +162,7 @@
             this.scanTabControl.Multiline = true;
             this.scanTabControl.Name = "scanTabControl";
             this.scanTabControl.SelectedIndex = 0;
-            this.scanTabControl.Size = new System.Drawing.Size(350, 662);
+            this.scanTabControl.Size = new System.Drawing.Size(362, 666);
             this.scanTabControl.SizeMode = System.Windows.Forms.TabSizeMode.FillToRight;
             this.scanTabControl.TabIndex = 6;
             // 
@@ -171,7 +172,7 @@
             this.modulesTabPage.Location = new System.Drawing.Point(4, 22);
             this.modulesTabPage.Name = "modulesTabPage";
             this.modulesTabPage.Padding = new System.Windows.Forms.Padding(3);
-            this.modulesTabPage.Size = new System.Drawing.Size(342, 636);
+            this.modulesTabPage.Size = new System.Drawing.Size(354, 640);
             this.modulesTabPage.TabIndex = 0;
             this.modulesTabPage.Text = "Modules";
             this.modulesTabPage.UseVisualStyleBackColor = true;
@@ -193,7 +194,7 @@
             this.modulesDataGridView.Name = "modulesDataGridView";
             this.modulesDataGridView.RowHeadersVisible = false;
             this.modulesDataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.modulesDataGridView.Size = new System.Drawing.Size(336, 630);
+            this.modulesDataGridView.Size = new System.Drawing.Size(348, 634);
             this.modulesDataGridView.TabIndex = 2;
             // 
             // moduleName
@@ -259,7 +260,7 @@
             // 
             // scanKernelButton
             // 
-            this.scanKernelButton.Location = new System.Drawing.Point(393, 426);
+            this.scanKernelButton.Location = new System.Drawing.Point(401, 427);
             this.scanKernelButton.Name = "scanKernelButton";
             this.scanKernelButton.Size = new System.Drawing.Size(75, 23);
             this.scanKernelButton.TabIndex = 8;
@@ -267,11 +268,19 @@
             this.scanKernelButton.UseVisualStyleBackColor = true;
             this.scanKernelButton.Click += new System.EventHandler(this.scanKernelButton_Click);
             // 
+            // scanProgressBar
+            // 
+            this.scanProgressBar.Location = new System.Drawing.Point(368, 484);
+            this.scanProgressBar.Name = "scanProgressBar";
+            this.scanProgressBar.Size = new System.Drawing.Size(133, 23);
+            this.scanProgressBar.TabIndex = 9;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(852, 682);
+            this.ClientSize = new System.Drawing.Size(869, 686);
+            this.Controls.Add(this.scanProgressBar);
             this.Controls.Add(this.scanKernelButton);
             this.Controls.Add(this.scanPanel);
             this.Controls.Add(this.processPanel);
@@ -312,6 +321,7 @@
         private System.Windows.Forms.Button scanKernelButton;
         private System.Windows.Forms.DataGridViewTextBoxColumn driverObjectName;
         private System.Windows.Forms.DataGridViewTextBoxColumn driverObjectResult;
+        private System.Windows.Forms.ProgressBar scanProgressBar;
     }
 }
 

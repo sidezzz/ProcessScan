@@ -30,42 +30,48 @@ namespace Processes.Scanning
             ScanMethods = new List<IModuleScan>();
             ScanMethods.Add(new WinTrustScan());
             ScanMethods.Add(new HSBScan());
-            //ScanMethods.Add(new NDUScan());
+            ScanMethods.Add(new NDUScan());
             KernelScanner = new Driver.DriverScanner();
         }
 
 
-        public void BeginScan(List<ProcessInfo> processList, Action<ModuleInfo> addModuleCallback)
+        public void BeginScan(List<ProcessInfo> processList, Action<ModuleInfo> addModuleCallback, Action moduleScannedCallback)
         {
             CacheWins = 0;
             CacheMisses = 0;
 
             Logger.Log("Started scanning...");
-            var startTime = DateTime.Now;
+            var sw = Stopwatch.StartNew();
             Parallel.ForEach(processList, (process) =>
             {
                 try
                 {
-                    ScanProcess(process, addModuleCallback);                
+                    ScanProcess(process, addModuleCallback, moduleScannedCallback);                
                 }
                 catch (Exception e)
                 {
                     Logger.Log($"BeginScan exception: {e.Message}");
                 }
             });
-            var scanTime = DateTime.Now - startTime;
-            Logger.Log($"Scan completed, scan time: {scanTime.TotalSeconds} seconds, " +
+            Logger.Log($"Scan completed, scan time: {sw.Elapsed.TotalSeconds} seconds, " +
                 $"{CacheMisses} unique files scanned, " +
                 $"total count {(CacheWins + CacheMisses)}");
         }
 
-        public void ScanProcess(ProcessInfo processInfo, Action<ModuleInfo> addModuleCallback)
+        public void ScanProcess(ProcessInfo processInfo, Action<ModuleInfo> addModuleCallback, Action moduleScannedCallback)
         {
             try
             {
-                Parallel.ForEach(processInfo.GetModules(), (module) =>
+                Parallel.ForEach(processInfo.Modules, (module) =>
                 {
+                    var sw = Stopwatch.StartNew();
                     ScanModule(module, addModuleCallback);
+                    //if (sw.Elapsed.TotalSeconds > 1)
+                    //{
+                    //    Logger.Log($"Scan {module.Path}, scan time: {sw.Elapsed.TotalSeconds} seconds");
+                    //}
+
+                    moduleScannedCallback();
                 });
             }
             catch (Exception e)
@@ -79,12 +85,11 @@ namespace Processes.Scanning
         {
             try
             {
-                if (!ScanResultCache.TryGetValue(moduleInfo.Path.ToLower(), out moduleInfo.Result))
+                if (!ScanResultCache.TryGetValue(moduleInfo.Path, out moduleInfo.Result))
                 {
-                    ScanResultCache.TryAdd(moduleInfo.Path.ToLower(), null);
+                    ScanResultCache.TryAdd(moduleInfo.Path, null);
                     byte[] cachedFile = File.ReadAllBytes(moduleInfo.Path);
 
-                    var startTime = DateTime.Now;
                     foreach (var method in ScanMethods)
                     {
                         if (method.Scan(moduleInfo.Path, ref moduleInfo.Result, cachedFile) == ScanStatus.Stop)
@@ -92,10 +97,8 @@ namespace Processes.Scanning
                             break;
                         }
                     }
-                    var scanTime = DateTime.Now - startTime;
-                    Logger.Log($"Scan {moduleInfo.Path} completed, scan time: {scanTime.TotalSeconds} seconds");
 
-                    ScanResultCache.TryAdd(moduleInfo.Path.ToLower(), moduleInfo.Result);
+                    ScanResultCache[moduleInfo.Path] = moduleInfo.Result;
                     Interlocked.Increment(ref CacheMisses);
                 }
                 else

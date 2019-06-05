@@ -25,7 +25,7 @@ namespace Processes.Scanning
 
         public ModuleInfo(ProcessModule m, string processName)
         {
-            Path = m.FileName;
+            Path = m.FileName.ToLower();
             Name = m.ModuleName;//$"[{processName}]->{m.ModuleName}";
             Result = "Success";
             m.Dispose();
@@ -33,20 +33,19 @@ namespace Processes.Scanning
     }
     public class ProcessInfo : IDisposable
     {
-        private Process Proc;
-
         public readonly Icon Icon;
         public readonly string Path;
         public readonly string Name;
         public readonly int PID;
+        public readonly List<ModuleInfo> Modules;
 
-        public ProcessInfo(Process p)
+        public ProcessInfo(Process proc)
         {
-            Proc = p;
-            Icon = Icon.ExtractAssociatedIcon(Proc.MainModule.FileName);
-            Path = Proc.MainModule.FileName;
-            Name = Proc.ProcessName;
-            PID = Proc.Id;
+            Icon = Icon.ExtractAssociatedIcon(proc.MainModule.FileName);
+            Path = proc.MainModule.FileName;
+            Name = proc.ProcessName;
+            PID = proc.Id;
+            Modules = proc.Modules.Cast<ProcessModule>().Select(m => new ModuleInfo(m, Name)).ToList();
         }
 
         ~ProcessInfo()
@@ -55,17 +54,11 @@ namespace Processes.Scanning
         }
         public void Dispose()
         {
-            Proc.Dispose();
             Icon?.Dispose();
-        }
-
-        public List<ModuleInfo> GetModules()
-        {
-            return Proc.Modules.Cast<ProcessModule>().Select(m => new ModuleInfo(m, Name)).ToList();
         }
     }
 
-    sealed class Utils
+    static class Utils
     {
 
         public static List<ProcessInfo> GetProcessList()

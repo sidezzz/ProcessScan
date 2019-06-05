@@ -10,27 +10,27 @@ namespace Processes.Scanning
 {
     class HSBScan : IModuleScan
     {
-        public class ComparableHash : IComparable
+        class ComparableHash : IComparable
         {
-            public byte[] byteHash;
+            byte[] ByteHash;
             public ComparableHash(string hash)
             {
-                byteHash = Utils.StringToByteArray(hash);
+                ByteHash = Utils.StringToByteArray(hash);
             }
             public ComparableHash(byte[] hash)
             {
-                byteHash = hash;
+                ByteHash = hash;
             }
             public int CompareTo(object obj)
             {
                 ComparableHash otherHash = obj as ComparableHash;
                 if (otherHash != null)
                 {
-                    for (int a = 0; a < byteHash.Length; a++)
+                    for (int a = 0; a < ByteHash.Length; a++)
                     {
-                        if (byteHash[a] != otherHash.byteHash[a])
+                        if (ByteHash[a] != otherHash.ByteHash[a])
                         {
-                            return byteHash[a] - otherHash.byteHash[a];
+                            return ByteHash[a] - otherHash.ByteHash[a];
                         }
                     }
                     return 0;
@@ -42,12 +42,11 @@ namespace Processes.Scanning
             }
         }
 
-        private readonly SortedDictionary<ComparableHash, string> HSBContainer;
+        private readonly SortedDictionary<ComparableHash, string> HSBContainer = new SortedDictionary<ComparableHash, string>();
         private bool IsInit;
         private Task InitTask;
         public HSBScan()
         {
-            HSBContainer = new SortedDictionary<ComparableHash, string>();
             InitHSB();
         }
 
@@ -86,11 +85,12 @@ namespace Processes.Scanning
             var words = line.Split(':');
             if (words.Length > 2)
             {
-                if (words[0].Length == 32)
+                var hash = words[0];
+                if (hash.Length == 32)
                 {
                     try
                     {
-                        HSBContainer.Add(new ComparableHash(words[0]), words[2]);
+                        HSBContainer.Add(new ComparableHash(hash), words[2]);
                     }
                     catch(ArgumentException)
                     {
