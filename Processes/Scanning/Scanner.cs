@@ -21,7 +21,11 @@ namespace Processes.Scanning
         private int CacheWins;
         private int CacheMisses;
 
-        public readonly Driver.DriverScanner KernelScanner;
+        private readonly Driver.DriverScanner KernelScanner;
+        public bool IsDriverLoaded => KernelScanner.IsValid;
+
+        public delegate void ModuleScannedHandler(ModuleInfo module);
+        public event ModuleScannedHandler ModuleScanned;
 
 
         public Scanner()
@@ -35,7 +39,7 @@ namespace Processes.Scanning
         }
 
 
-        public void BeginScan(List<ProcessInfo> processList, Action<ModuleInfo> addModuleCallback, Action moduleScannedCallback)
+        public void BeginScan(List<ProcessInfo> processList)
         {
             CacheWins = 0;
             CacheMisses = 0;
@@ -46,7 +50,7 @@ namespace Processes.Scanning
             {
                 try
                 {
-                    ScanProcess(process, addModuleCallback, moduleScannedCallback);                
+                    ScanProcess(process);                
                 }
                 catch (Exception e)
                 {
@@ -58,20 +62,20 @@ namespace Processes.Scanning
                 $"total count {(CacheWins + CacheMisses)}");
         }
 
-        public void ScanProcess(ProcessInfo processInfo, Action<ModuleInfo> addModuleCallback, Action moduleScannedCallback)
+        private void ScanProcess(ProcessInfo processInfo)
         {
             try
             {
                 Parallel.ForEach(processInfo.Modules, (module) =>
                 {
                     var sw = Stopwatch.StartNew();
-                    ScanModule(module, addModuleCallback);
+                    ScanModule(module);
                     //if (sw.Elapsed.TotalSeconds > 1)
                     //{
                     //    Logger.Log($"Scan {module.Path}, scan time: {sw.Elapsed.TotalSeconds} seconds");
                     //}
 
-                    moduleScannedCallback();
+                    ModuleScanned(module);
                 });
             }
             catch (Exception e)
@@ -81,13 +85,12 @@ namespace Processes.Scanning
         }
 
 
-        public void ScanModule(ModuleInfo moduleInfo, Action<ModuleInfo> addModuleCallback)
+        private void ScanModule(ModuleInfo moduleInfo)
         {
             try
             {
-                if (!ScanResultCache.TryGetValue(moduleInfo.Path, out moduleInfo.Result))
+                if (ScanResultCache.TryAdd(moduleInfo.Path, null))
                 {
-                    ScanResultCache.TryAdd(moduleInfo.Path, null);
                     byte[] cachedFile = File.ReadAllBytes(moduleInfo.Path);
 
                     foreach (var method in ScanMethods)
@@ -103,14 +106,9 @@ namespace Processes.Scanning
                 }
                 else
                 {
+                    moduleInfo.Result = ScanResultCache[moduleInfo.Path];
                     Interlocked.Increment(ref CacheWins);
                 }
-
-                if (moduleInfo.Result != null)
-                {
-                    addModuleCallback(moduleInfo);
-                }
-
             }
             catch (Exception e)
             {

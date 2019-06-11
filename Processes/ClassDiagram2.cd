@@ -1,0 +1,177 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="Processes.Scanning.Scanner">
+    <Position X="10.25" Y="3.25" Width="1.5" />
+    <NestedTypes>
+      <Delegate Name="Processes.Scanning.Scanner.ModuleScannedHandler" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Scanning\Scanner.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>IAAAAAAAAAAAAAAAAAAEAgAAAgAEASAAAEAAAAAAgAM=</HashCode>
+      <FileName>Scanning\Scanner.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Processes.Scanning.HSBScan">
+    <Position X="12" Y="3.75" Width="1.75" />
+    <Compartments>
+      <Compartment Name="Nested Types" Collapsed="false" />
+    </Compartments>
+    <NestedTypes>
+      <Class Name="Processes.Scanning.HSBScan.ComparableHash">
+        <TypeIdentifier>
+          <NewMemberFileName>Scanning\HSBScan.cs</NewMemberFileName>
+        </TypeIdentifier>
+        <Lollipop Position="0.2" />
+      </Class>
+      <Class Name="Processes.Scanning.HSBScan.HSBStorage" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Scanning\HSBScan.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAA=</HashCode>
+      <FileName>Scanning\HSBScan.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.227" />
+  </Class>
+  <Class Name="Processes.Scanning.NDUScan">
+    <Position X="14" Y="3.75" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Nested Types" Collapsed="false" />
+    </Compartments>
+    <NestedTypes>
+      <Class Name="Processes.Scanning.NDUScan.ExtendedSignature">
+        <NestedTypes>
+          <Enum Name="Processes.Scanning.NDUScan.ExtendedSignature.OffsetType">
+            <TypeIdentifier>
+              <NewMemberFileName>Scanning\NDUScan.cs</NewMemberFileName>
+            </TypeIdentifier>
+          </Enum>
+        </NestedTypes>
+        <TypeIdentifier>
+          <NewMemberFileName>Scanning\NDUScan.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+      <Class Name="Processes.Scanning.NDUScan.NDUStorage" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Scanning\NDUScan.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCAAAAAA=</HashCode>
+      <FileName>Scanning\NDUScan.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Processes.Scanning.WinTrustScan">
+    <Position X="15.75" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Scanning\WinTrustScan.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Processes.MainForm">
+    <Position X="8.25" Y="0.5" Width="1.5" />
+    <NestedTypes>
+      <Class Name="Processes.MainForm.ProcessInfoRow" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>MainForm.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+      <Class Name="Processes.MainForm.ModuleInfoRow" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>MainForm.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+      <Class Name="Processes.MainForm.DriverObjectInfoRow" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>MainForm.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>EgwBIiIIACQBQAQRAQTAAAAKBQAAAIgKAIAACCAAAEA=</HashCode>
+      <FileName>MainForm.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Processes.Scanning.Utils">
+    <Position X="15.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAgAAAAAAAAAAAQAAAIAAAABAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Scanning\Utils.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Processes.Program">
+    <Position X="10.25" Y="1" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAA=</HashCode>
+      <FileName>Program.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Processes.Driver.DriverScanner">
+    <Position X="17.75" Y="2.75" Width="1.5" />
+    <NestedTypes>
+      <Enum Name="Processes.Driver.DriverScanner.EResult" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Driver\DriverScanner.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Struct Name="Processes.Driver.DriverScanner.DriverObject" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Driver\DriverScanner.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Struct Name="Processes.Driver.DriverScanner.DriverObjectArray" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Driver\DriverScanner.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAQAAAAAAAAAAAAAAAACAAAAAAAAAAAAA=</HashCode>
+      <FileName>Driver\DriverScanner.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Processes.Driver.BaseDriver">
+    <Position X="16" Y="5.25" Width="1.5" />
+    <NestedTypes>
+      <Struct Name="Processes.Driver.BaseDriver.UNICODE_STRING" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Driver\BaseDriver.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAQEAAAAAAASEAgAkAwAAAAAAAAAAAABAABIAAgAAEA=</HashCode>
+      <FileName>Driver\BaseDriver.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Processes.Logger">
+    <Position X="12.25" Y="0.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAEAAAgAAAAAEAgAAAAAQAAAAAAAAAA=</HashCode>
+      <FileName>Logger.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Interface Name="Processes.Scanning.IModuleScan">
+    <Position X="14" Y="2.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Scanning\IModuleScan.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Enum Name="Processes.Scanning.ScanStatus">
+    <Position X="14" Y="1" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAIAAAAAAAAAA=</HashCode>
+      <FileName>Scanning\IModuleScan.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

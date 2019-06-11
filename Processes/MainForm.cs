@@ -8,13 +8,13 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Processes.Scanning;
+using Processes.ThirdParty;
 
 namespace Processes
 {
     public partial class MainForm : Form
     {
         private SortableBindingList<ProcessInfoRow> ProcessStore = new SortableBindingList<ProcessInfoRow>();
-
         private SortableBindingList<ModuleInfoRow> ModuleStore = new SortableBindingList<ModuleInfoRow>();
         private BindingList<DriverObjectInfoRow> DriverObjectStore = new BindingList<DriverObjectInfoRow>();
 
@@ -31,7 +31,9 @@ namespace Processes
             driverObjectDataGridView.DataSource = DriverObjectStore;
             driverObjectDataGridView.RowsAdded += driverObjectDataGridView_RowsAdded;
 
-            scanKernelButton.Enabled = Program.Scanner.KernelScanner.IsValid;
+            scanKernelButton.Enabled = Program.Scanner.IsDriverLoaded;
+            Program.Scanner.ModuleScanned += OnModuleAdd;
+            Program.Scanner.ModuleScanned += OnModuleScanned;
         }
 
 
@@ -137,29 +139,34 @@ namespace Processes
 
 
         HashSet<string> ExistedModules = new HashSet<string>();
-        private void OnModuleAdd(ModuleInfo info)
+        private void OnModuleAdd(ModuleInfo module)
         {
-            if (InvokeRequired)
+            if (module.Result != null)
             {
-                modulesDataGridView.BeginInvoke((MethodInvoker)delegate ()
+                if (InvokeRequired)
                 {
-                    if (!ExistedModules.Contains(info.Path))
+                    modulesDataGridView.BeginInvoke(new MethodInvoker(() => OnModuleAdd(module)));
+                }
+                else
+                {
+                    if (!ExistedModules.Contains(module.Path))
                     {
-                        ModuleStore.Add(new ModuleInfoRow(info));
-                        ExistedModules.Add(info.Path);
+                        ExistedModules.Add(module.Path);
+                        ModuleStore.Add(new ModuleInfoRow(module));
                     }
-                });
+                }
             }
         }
 
-        private void OnModuleScanned()
+        private void OnModuleScanned(ModuleInfo module)
         {
             if (InvokeRequired)
             {
-                scanProgressBar.BeginInvoke((MethodInvoker)delegate ()
-                {
-                    scanProgressBar.Value++;
-                });
+                scanProgressBar.BeginInvoke(new MethodInvoker(() => OnModuleScanned(module)));
+            }
+            else
+            {
+                scanProgressBar.Value++;
             }
         }
 
@@ -189,7 +196,7 @@ namespace Processes
                     scanProgressBar.Maximum = moduleCount;
                 });
 
-                Program.Scanner.BeginScan(processList, OnModuleAdd, OnModuleScanned);
+                Program.Scanner.BeginScan(processList);
             });
 
             scanProgressBar.Value = scanProgressBar.Maximum;

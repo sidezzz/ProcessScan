@@ -42,20 +42,71 @@ namespace Processes.Scanning
             }
         }
 
-        private readonly SortedDictionary<ComparableHash, string> HSBContainer = new SortedDictionary<ComparableHash, string>();
-        private bool IsInit;
-        private Task InitTask;
-        public HSBScan()
+        class HSBStorage
         {
-            InitHSB();
+            private readonly SortedDictionary<ComparableHash, string> HSBContainer = new SortedDictionary<ComparableHash, string>();
+            private bool IsInit;
+            private Task InitTask;
+
+            private void ParseHSBLine(string line)
+            {
+                var words = line.Split(':');
+                if (words.Length > 2)
+                {
+                    var hash = words[0];
+                    if (hash.Length == 32)
+                    {
+                        try
+                        {
+                            HSBContainer.Add(new ComparableHash(hash), words[2]);
+                        }
+                        catch (ArgumentException)
+                        {
+
+                        }
+                    }
+                }
+                else
+                {
+                    Logger.Log($"ParseHSBLine invalid line {line}");
+                }
+            }
+            public HSBStorage()
+            {
+                InitTask = new Task(() =>
+                {
+                    try
+                    {
+                        Utils.ParseFileByLine("database\\daily.hsb", ParseHSBLine);
+                        Utils.ParseFileByLine("database\\daily.hdb", ParseHSBLine);
+                        Logger.Log($"InitHSB loaded {HSBContainer.Count} signatures");
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Log($"InitHSB exception: {e.Message}");
+                    }
+                    IsInit = true;
+                });
+                InitTask.Start();
+            }
+
+            public SortedDictionary<ComparableHash, string> Container
+            {
+                get
+                {
+                    if (!IsInit)
+                    {
+                        InitTask.Wait();
+                    }
+                    return HSBContainer;
+                }
+            }
         }
+        private static HSBStorage SignatureStorage = new HSBStorage();
+
 
         public ScanStatus Scan(string fileName, ref string result, byte[] cachedFile)
         {
-            if (!IsInit)
-            {
-                InitTask.Wait();
-            }
             try
             {
                 var hash = Utils.GetFileHash(cachedFile);
@@ -66,7 +117,7 @@ namespace Processes.Scanning
                 }
 
                 string outResult="";
-                if (HSBContainer.TryGetValue(new ComparableHash(hash), out outResult))
+                if (SignatureStorage.Container.TryGetValue(new ComparableHash(hash), out outResult))
                 {
                     result = outResult;
                     return ScanStatus.Stop;
@@ -78,49 +129,6 @@ namespace Processes.Scanning
                 Logger.Log($"HSBScan exception: {e.Message}");
             }
             return ScanStatus.Continiue;
-        }
-
-        private void ParseHSBLine(string line)
-        {
-            var words = line.Split(':');
-            if (words.Length > 2)
-            {
-                var hash = words[0];
-                if (hash.Length == 32)
-                {
-                    try
-                    {
-                        HSBContainer.Add(new ComparableHash(hash), words[2]);
-                    }
-                    catch(ArgumentException)
-                    {
-
-                    }
-                }
-            }
-            else
-            {
-                Logger.Log($"ParseHSBLine invalid line {line}");
-            }
-        }
-
-        private void InitHSB()
-        {
-            InitTask = new Task(() =>
-             {
-                 try
-                 {
-                     Utils.ParseFileByLine("database\\daily.hsb", ParseHSBLine);
-                     Utils.ParseFileByLine("database\\daily.hdb", ParseHSBLine);
-                     Logger.Log($"InitHSB loaded {HSBContainer.Count} signatures");
-                 }
-                 catch (Exception e)
-                 {
-                     Logger.Log($"InitHSB exception: {e.Message}");
-                 }
-                 IsInit = true;
-             });
-            InitTask.Start();
         }
     }
 }
