@@ -19,8 +19,7 @@ namespace Processes.Scanning
             {
                 Any,
                 EndOfFile,
-                EntryPoint,
-                Section
+                EntryPoint
             }
 
             public string Name;
@@ -125,8 +124,8 @@ namespace Processes.Scanning
                 {
                     try
                     {
-                        Utils.ParseFileByLine("database\\daily.ndb", ParseNDULine);
-                        Utils.ParseFileByLine("database\\daily.ndu", ParseNDULine);
+                        Utils.ParseFileByLine("..\\database\\daily.ndb", ParseNDULine);
+                        Utils.ParseFileByLine("..\\database\\daily.ndu", ParseNDULine);
                         Logger.Log($"InitNDU loaded {NDUContainer.Count} signatures");
                     }
                     catch (Exception e)
@@ -153,7 +152,7 @@ namespace Processes.Scanning
 
         [DllImport("PEParser.dll")]
         private static extern int GetEntryRawOffset(byte[] image);
-        public ScanStatus Scan(string fileName, ref string result, byte[] cachedFile)
+        public ScanStatus Scan(string filePath, ref string result, byte[] cachedFile)
         {
             try
             {

@@ -77,8 +77,8 @@ namespace Processes.Scanning
                 {
                     try
                     {
-                        Utils.ParseFileByLine("database\\daily.hsb", ParseHSBLine);
-                        Utils.ParseFileByLine("database\\daily.hdb", ParseHSBLine);
+                        Utils.ParseFileByLine("..\\database\\daily.hsb", ParseHSBLine);
+                        Utils.ParseFileByLine("..\\database\\daily.hdb", ParseHSBLine);
                         Logger.Log($"InitHSB loaded {HSBContainer.Count} signatures");
                     }
                     catch (Exception e)

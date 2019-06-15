@@ -45,7 +45,11 @@ namespace Processes
             {
                 row.DefaultCellStyle.BackColor = Color.White;
             }
-            else if (status == "Unsafe")
+            else if (status == "No digital cert")
+            {
+                row.DefaultCellStyle.BackColor = Color.Yellow;
+            }
+            else if (status.StartsWith("PUA"))
             {
                 row.DefaultCellStyle.BackColor = Color.Yellow;
             }
@@ -119,23 +123,16 @@ namespace Processes
             }
         }
 
-
-        List<ProcessInfoRow> RefreshProcessGrid()
-        {
-            return Utils.GetProcessList().Select(p => new ProcessInfoRow(p)).ToList();
-        }
-
         private async void refreshButton_Click(object sender, EventArgs e)
         {
             refreshButton.Enabled = false;
             refreshButton.Text = "Refreshing...";
-            var processList = await Task.Run(() => RefreshProcessGrid());
+            var processList = await Task.Run(() => Utils.GetProcessList().Select(p => new ProcessInfoRow(p)).ToList());
             ProcessStore.Clear();
             ProcessStore.AddRange(processList);
             refreshButton.Text = "Refresh";
             refreshButton.Enabled = true;
         }
-
 
 
         HashSet<string> ExistedModules = new HashSet<string>();

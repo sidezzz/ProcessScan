@@ -81,33 +81,6 @@ extern "C" __declspec(dllexport) DWORD GetEntryRawOffset(PVOID image)
 	return ret;
 }
 
-
-struct DriverObject
-{
-	wchar_t Name[100];
-	int Result;
-};
-
-struct DriverArray
-{
-	int Count;
-	DriverObject Array[3];
-};
-
-extern "C" __declspec(dllexport) void TestFunc(DriverObject* object_array, int count)
-{
-	char buf[123];
-	sprintf_s(buf, "%p", object_array);
-	MessageBoxA(0, buf, buf, 0);
-	for (int a = 0; a < count; a++)
-	{
-		sizeof(DriverArray);
-		memcpy(object_array[a].Name, L"suka", sizeof(L"suka"));
-		object_array[a].Result = a;
-	}
-}
-
-
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
                        LPVOID lpReserved

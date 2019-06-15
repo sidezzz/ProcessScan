@@ -9,16 +9,16 @@ namespace Processes.Scanning
 {
     class WinTrustScan : IModuleScan
     {
-        public ScanStatus Scan(string fileName, ref string result, byte[] cachedFile)
+        public ScanStatus Scan(string filePath, ref string result, byte[] cachedFile)
         {
-            if(WinTrust.VerifyEmbeddedSignature(fileName) == WinVerifyTrustResult.Success)
+            if(WinTrust.VerifyEmbeddedSignature(filePath) == WinVerifyTrustResult.Success)
             {
                 result = "Success";
                 return ScanStatus.Stop;
             }
             else
             {
-                result = "Unsafe";
+                result = "No digital cert";
                 return ScanStatus.Continiue;
             }
         }

@@ -24,13 +24,13 @@ namespace Processes
 
         public static Logger Instance => LazyLogger.Value;
 
-        public static void Log(string str)
+        public static void Log(string message)
         {
             try
             {
                 lock (Instance.WriteSync)
                 {
-                    Instance.LogWritter.WriteLine($"[{DateTime.Now}] {str}");
+                    Instance.LogWritter.WriteLine($"[{DateTime.Now}] {message}");
                 }
             }
             catch(Exception e)

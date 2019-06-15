@@ -23,7 +23,7 @@ namespace Processes.Scanning
         public readonly string Name;
         public string Result;
 
-        public ModuleInfo(ProcessModule m, string processName)
+        public ModuleInfo(ProcessModule m)
         {
             Path = m.FileName.ToLower();
             Name = m.ModuleName;//$"[{processName}]->{m.ModuleName}";
@@ -45,7 +45,7 @@ namespace Processes.Scanning
             Path = proc.MainModule.FileName;
             Name = proc.ProcessName;
             PID = proc.Id;
-            Modules = proc.Modules.Cast<ProcessModule>().Select(m => new ModuleInfo(m, Name)).ToList();
+            Modules = proc.Modules.Cast<ProcessModule>().Select(m => new ModuleInfo(m)).ToList();
         }
 
         ~ProcessInfo()
@@ -99,9 +99,9 @@ namespace Processes.Scanning
             }
         }
 
-        public static void ParseFileByLine(string file, Action<string> parseLine)
+        public static void ParseFileByLine(string filePath, Action<string> parseLine)
         {
-            using (StreamReader readStream = new StreamReader(file))
+            using (StreamReader readStream = new StreamReader(filePath))
             {
                 while (!readStream.EndOfStream)
                 {
@@ -112,7 +112,7 @@ namespace Processes.Scanning
                     }
                     catch (Exception e)
                     {
-                        Logger.Log("ParseFileByLine exception: " + e.Message+", "+ line);
+                        Logger.Log($"ParseFileByLine exception: {e.Message}, {line}");
                     }
                 }
             }

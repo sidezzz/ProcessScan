@@ -14,6 +14,6 @@ namespace Processes.Scanning
 
     interface IModuleScan
     {
-        ScanStatus Scan(string fileName, ref string result, byte[] cachedFile);
+        ScanStatus Scan(string filePath, ref string result, byte[] cachedFile);
     }
 }

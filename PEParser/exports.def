@@ -2,4 +2,3 @@ LIBRARY
 EXPORTS
 	GetEntryRawOffset
 	GetSectionByIndex
-	TestFunc
