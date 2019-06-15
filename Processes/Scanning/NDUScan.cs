@@ -148,7 +148,8 @@ namespace Processes.Scanning
                 }
             }
         }
-        private static NDUStorage SignatureStorage = new NDUStorage();
+        private static Lazy<NDUStorage> LazySignatureStorage = new Lazy<NDUStorage>(()=> new NDUStorage());
+        private static NDUStorage SignatureStorage => LazySignatureStorage.Value;
 
         [DllImport("PEParser.dll")]
         private static extern int GetEntryRawOffset(byte[] image);

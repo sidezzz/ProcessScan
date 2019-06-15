@@ -102,7 +102,8 @@ namespace Processes.Scanning
                 }
             }
         }
-        private static HSBStorage SignatureStorage = new HSBStorage();
+        private static Lazy<HSBStorage> LazySignatureStorage = new Lazy<HSBStorage>(() => new HSBStorage());
+        private static HSBStorage SignatureStorage => LazySignatureStorage.Value;
 
 
         public ScanStatus Scan(FileCache file, ref string result)

@@ -33,7 +33,7 @@
       </Class>
     </NestedTypes>
     <TypeIdentifier>
-      <HashCode>AAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAA=</HashCode>
+      <HashCode>AAQAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAACAAAAAA=</HashCode>
       <FileName>Scanning\HSBScan.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.227" />
@@ -63,7 +63,7 @@
       </Class>
     </NestedTypes>
     <TypeIdentifier>
-      <HashCode>AAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCAAAAAA=</HashCode>
+      <HashCode>AAQAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAACCAAAAAA=</HashCode>
       <FileName>Scanning\NDUScan.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.2" />

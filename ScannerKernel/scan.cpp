@@ -246,38 +246,35 @@ int Scan(DriverObject* array, int max)
 				{
 					for (auto entry : directory_object->HashBuckets)
 					{
-						if (entry)
+						while (entry != nullptr && entry->Object != nullptr)
 						{
-							while (entry != nullptr && entry->Object != nullptr)
+							auto driver = PDRIVER_OBJECT(entry->Object);
+
+							auto result = EResult::Success;
+							for (int a = 0; a <= IRP_MJ_MAXIMUM_FUNCTION; a++)
 							{
-								auto driver = PDRIVER_OBJECT(entry->Object);
-
-								auto result = EResult::Success;
-								for (int a = 0; a <= IRP_MJ_MAXIMUM_FUNCTION; a++)
+								if (!IsInValidImage(modules, driver->MajorFunction[a]))
 								{
-									if (!IsInValidImage(modules, driver->MajorFunction[a]))
-									{
-										result = EResult::Hijacked;
-										DbgPrint("[ScannerKernel] found hijacked driver %wZ, function %d, %p\n", driver->DriverName, a, driver->MajorFunction[a]);
-									}
-									else
-									{
-										DbgPrint("[ScannerKernel] driver %wZ, valid function %d\n", driver->DriverName, a);
-									}
+									result = EResult::Hijacked;
+									DbgPrint("[ScannerKernel] found hijacked driver %wZ, function %d, %p\n", driver->DriverName, a, driver->MajorFunction[a]);
 								}
-								if (saved_result_count < max)
+								else
 								{
-									if (driver->DriverName.Buffer)
-									{
-										memcpy(array[saved_result_count].Name, driver->DriverName.Buffer,
-											driver->DriverName.Length < 100 ? driver->DriverName.Length : 90);
-										array[saved_result_count].Result = result;
-										saved_result_count++;
-									}
+									DbgPrint("[ScannerKernel] driver %wZ, valid function %d\n", driver->DriverName, a);
 								}
-
-								entry = entry->ChainLink;
 							}
+							if (saved_result_count < max)
+							{
+								if (driver->DriverName.Buffer)
+								{
+									memcpy(array[saved_result_count].Name, driver->DriverName.Buffer,
+										driver->DriverName.Length < 100 ? driver->DriverName.Length : 90);
+									array[saved_result_count].Result = result;
+									saved_result_count++;
+								}
+							}
+
+							entry = entry->ChainLink;
 						}
 					}
 				}
