@@ -91,11 +91,11 @@ namespace Processes.Scanning
             {
                 if (ScanResultCache.TryAdd(moduleInfo.Path, null))
                 {
-                    byte[] cachedFile = File.ReadAllBytes(moduleInfo.Path);
+                    var cachedFile = new FileCache(moduleInfo.Path);
 
                     foreach (var method in ScanMethods)
                     {
-                        if (method.Scan(moduleInfo.Path, ref moduleInfo.Result, cachedFile) == ScanStatus.Stop)
+                        if (method.Scan(cachedFile, ref moduleInfo.Result) == ScanStatus.Stop)
                         {
                             break;
                         }

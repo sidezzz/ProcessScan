@@ -152,33 +152,33 @@ namespace Processes.Scanning
 
         [DllImport("PEParser.dll")]
         private static extern int GetEntryRawOffset(byte[] image);
-        public ScanStatus Scan(string filePath, ref string result, byte[] cachedFile)
+        public ScanStatus Scan(FileCache file, ref string result)
         {
             try
             {
-                var file = Utils.ByteArrayToString(cachedFile);
+                var fileStr = Utils.ByteArrayToString(file.Content);
 
                 foreach (var sig in SignatureStorage.Container)
                 {
                     try
                     {
-                        if (sig.Offset + sig.Shift > file.Length)
+                        if (sig.Offset + sig.Shift > fileStr.Length)
                             continue;
                         var offset = sig.Offset;
                         if (sig.Type == ExtendedSignature.OffsetType.EntryPoint)
                         {
-                            var entry = GetEntryRawOffset(cachedFile);
+                            var entry = GetEntryRawOffset(file.Content);
                             //Logger.Log(fileName+" Entry: " + entry.ToString());
                             offset += entry;
                         }
                         else if (sig.Type == ExtendedSignature.OffsetType.EndOfFile)
                         {
-                            offset = file.Length - sig.Offset;
+                            offset = fileStr.Length - sig.Offset;
                         }
 
                         if (sig.Shift > 0)
                         {
-                            var scanRange = file.Substring(offset, sig.Shift);
+                            var scanRange = fileStr.Substring(offset, sig.Shift);
                             if (sig.Signature.IsMatch(scanRange))
                             {
                                 result = sig.Name;
@@ -187,7 +187,7 @@ namespace Processes.Scanning
                         }
                         else
                         {
-                            if (sig.Signature.IsMatch(file, offset))
+                            if (sig.Signature.IsMatch(fileStr, offset))
                             {
                                 result = sig.Name;
                                 return ScanStatus.Stop;

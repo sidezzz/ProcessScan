@@ -105,11 +105,11 @@ namespace Processes.Scanning
         private static HSBStorage SignatureStorage = new HSBStorage();
 
 
-        public ScanStatus Scan(string fileName, ref string result, byte[] cachedFile)
+        public ScanStatus Scan(FileCache file, ref string result)
         {
             try
             {
-                var hash = Utils.GetFileHash(cachedFile);
+                var hash = Utils.GetFileHash(file.Content);
 
                 if (hash.Length == 0)
                 {

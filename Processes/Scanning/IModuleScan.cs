@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,8 +13,29 @@ namespace Processes.Scanning
         Stop
     }
 
+    class FileCache
+    {
+        public readonly string Path;
+
+        Lazy<byte[]> LazyFile;
+        public byte[] Content => LazyFile.Value;
+
+        public FileCache(string path)
+        {
+            Path = path;
+            if (!File.Exists(path))
+                throw new ArgumentException("File path doesn't exist!");
+            LazyFile = new Lazy<byte[]>(() =>
+            {
+                Console.WriteLine("Reading file");
+                var ret = File.ReadAllBytes(path);
+                return ret;
+            });
+        }
+    }
+
     interface IModuleScan
     {
-        ScanStatus Scan(string filePath, ref string result, byte[] cachedFile);
+        ScanStatus Scan(FileCache file, ref string result);
     }
 }
