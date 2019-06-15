@@ -17,7 +17,7 @@ namespace Processes.Scanning
     {
         public readonly string Path;
 
-        Lazy<byte[]> LazyFile;
+        Lazy<byte[]> LazyFile; //optimizing file reading with delayed initialization
         public byte[] Content => LazyFile.Value;
 
         public FileCache(string path)

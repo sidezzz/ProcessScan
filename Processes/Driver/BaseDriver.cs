@@ -36,7 +36,7 @@ namespace Processes.Driver
         private void AdjustPrivilege()
         {
             bool enabled = false;
-            var status = RtlAdjustPrivilege(10u, true, false, ref enabled);
+            var status = RtlAdjustPrivilege(10u, true, false, ref enabled); //adjusting privilege required for driver loading
             if (status != NtStatus.Success && !enabled)
             {
                 throw new UnauthorizedAccessException($"Can't adjust prevelege! {status.ToString()}");
@@ -68,7 +68,7 @@ namespace Processes.Driver
             using (var key = Registry.LocalMachine.CreateSubKey(registryPath))
             {
                 key.SetValue("ImagePath", "System32\\drivers\\" + Path.GetFileName(FilePath));
-                key.SetValue("Type", 1);
+                key.SetValue("Type", 1); //NtLoadDriver requires that field
             }
             return "\\Registry\\Machine\\" + registryPath;
         }

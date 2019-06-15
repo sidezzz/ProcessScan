@@ -176,22 +176,25 @@ namespace Processes.Scanning
                             offset = fileStr.Length - sig.Offset;
                         }
 
+
+                        var scanRange = fileStr;
                         if (sig.Shift > 0)
                         {
-                            var scanRange = fileStr.Substring(offset, sig.Shift);
-                            if (sig.Signature.IsMatch(scanRange))
-                            {
-                                result = sig.Name;
-                                return ScanStatus.Stop;
-                            }
+                            scanRange = fileStr.Substring(offset, sig.Shift);
                         }
                         else
                         {
-                            if (sig.Signature.IsMatch(fileStr, offset))
+                            //Stopwatch sw = Stopwatch.StartNew();
+                            if (sig.Signature.IsMatch(scanRange, offset))
                             {
                                 result = sig.Name;
                                 return ScanStatus.Stop;
                             }
+
+                            //if(sw.Elapsed.Milliseconds > 300)
+                            //{
+                            //    Logger.Log($"Slow signature {sw.Elapsed.Milliseconds}, {Path.GetFileName(file.Path)}, {sig.Name}");
+                            //}
                         }
                     }
                     catch(Exception e)

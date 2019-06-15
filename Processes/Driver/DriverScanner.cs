@@ -49,10 +49,9 @@ namespace Processes.Driver
             }
             List<DriverObjectInfo> ret = new List<DriverObjectInfo>();
 
-            int count = 250;
+            int count = 350; //this should be enough, usually they are less then 100
             IntPtr objectArray = Marshal.AllocHGlobal(Marshal.SizeOf<DriverObject>() * count);
-            uint bytesRead = 0;
-            if (ReadFile(DriverHandle, objectArray, Marshal.SizeOf<DriverObject>() * count, out bytesRead, IntPtr.Zero))
+            if (ReadFile(DriverHandle, objectArray, Marshal.SizeOf<DriverObject>() * count, out uint bytesRead, IntPtr.Zero))
             {
                 for (int a = 0; a < bytesRead / Marshal.SizeOf<DriverObject>(); a++)
                 {

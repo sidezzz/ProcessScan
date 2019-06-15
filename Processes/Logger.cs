@@ -17,7 +17,7 @@ namespace Processes
 
         private Logger()
         {
-            LogWritter = new StreamWriter("log.txt", true);
+            LogWritter = new StreamWriter("..\\log.txt", true);
             LogWritter.AutoFlush = true;
             WriteSync = new object();
         }

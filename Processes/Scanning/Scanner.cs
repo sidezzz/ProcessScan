@@ -32,6 +32,8 @@ namespace Processes.Scanning
         {
             ScanResultCache = new ConcurrentDictionary<string, string>();
             ScanMethods = new List<IModuleScan>();
+
+            //adding scan methods in complexity order, fastest method is the first
             ScanMethods.Add(new WinTrustScan());
             ScanMethods.Add(new HSBScan());
             ScanMethods.Add(new NDUScan());
@@ -68,14 +70,14 @@ namespace Processes.Scanning
             {
                 Parallel.ForEach(processInfo.Modules, (module) =>
                 {
-                    var sw = Stopwatch.StartNew();
+                    //var sw = Stopwatch.StartNew();
                     ScanModule(module);
                     //if (sw.Elapsed.TotalSeconds > 1)
                     //{
                     //    Logger.Log($"Scan {module.Path}, scan time: {sw.Elapsed.TotalSeconds} seconds");
                     //}
 
-                    ModuleScanned(module);
+                    ModuleScanned(module); //activating event
                 });
             }
             catch (Exception e)
@@ -89,7 +91,7 @@ namespace Processes.Scanning
         {
             try
             {
-                if (ScanResultCache.TryAdd(moduleInfo.Path, null))
+                if (ScanResultCache.TryAdd(moduleInfo.Path, null)) //avoiding multiple threads scanning same file
                 {
                     var cachedFile = new FileCache(moduleInfo.Path);
 
@@ -101,12 +103,12 @@ namespace Processes.Scanning
                         }
                     }
 
-                    ScanResultCache[moduleInfo.Path] = moduleInfo.Result;
-                    Interlocked.Increment(ref CacheMisses);
+                    ScanResultCache[moduleInfo.Path] = moduleInfo.Result; //add result into cache
+                    Interlocked.Increment(ref CacheMisses); 
                 }
                 else
                 {
-                    moduleInfo.Result = ScanResultCache[moduleInfo.Path];
+                    moduleInfo.Result = ScanResultCache[moduleInfo.Path]; //get result from cache
                     Interlocked.Increment(ref CacheWins);
                 }
             }

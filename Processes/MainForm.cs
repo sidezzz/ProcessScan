@@ -135,10 +135,10 @@ namespace Processes
         }
 
 
-        HashSet<string> ExistedModules = new HashSet<string>();
+        HashSet<string> ExistedModules = new HashSet<string>(); //skip duplicate modules from multiple processes
         private void OnModuleAdd(ModuleInfo module)
         {
-            if (module.Result != null)
+            if (module.Result != null) //null result means that there is already thread scanning this module
             {
                 if (InvokeRequired)
                 {

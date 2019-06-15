@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Class Name="Processes.Scanning.Scanner">
-    <Position X="10.25" Y="3.25" Width="1.5" />
+    <Position X="10" Y="4.75" Width="1.5" />
     <NestedTypes>
       <Delegate Name="Processes.Scanning.Scanner.ModuleScannedHandler" Collapsed="true">
         <TypeIdentifier>
@@ -96,7 +96,7 @@
       </Class>
     </NestedTypes>
     <TypeIdentifier>
-      <HashCode>EgwBIiIIACQBQAQRAQTAAAAKBQAAAIgKAIAACCAAAEA=</HashCode>
+      <HashCode>EgwBIiAIACQBQAQRAQTAAAAKBQAAAIgKAIAACCAAAEA=</HashCode>
       <FileName>MainForm.cs</FileName>
     </TypeIdentifier>
   </Class>
@@ -108,7 +108,7 @@
     </TypeIdentifier>
   </Class>
   <Class Name="Processes.Program">
-    <Position X="10.25" Y="1" Width="1.5" />
+    <Position X="10" Y="3" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAA=</HashCode>
       <FileName>Program.cs</FileName>
@@ -153,10 +153,17 @@
     </TypeIdentifier>
   </Class>
   <Class Name="Processes.Logger">
-    <Position X="12.25" Y="0.75" Width="1.5" />
+    <Position X="12" Y="0.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAEAAAgAAAAAEAgAAAAAQAAAAAAAAAA=</HashCode>
       <FileName>Logger.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Processes.Scanning.FileCache">
+    <Position X="10" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAgAAAAIAAAAAgAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Scanning\IModuleScan.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Interface Name="Processes.Scanning.IModuleScan">
